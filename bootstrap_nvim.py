@@ -33,19 +33,25 @@ class Dep:
     dnf: str = ""
     pacman: str = ""
     brew: str = ""
+    # Alternative binary names that also satisfy this dep (e.g. fdfind for fd on apt)
+    aliases: tuple = ()
+
+
+def is_satisfied(dep: Dep) -> bool:
+    return any(shutil.which(b) for b in (dep.binary,) + dep.aliases)
 
 
 # fmt: off
 DEPS = [
-    Dep("xclip",    "clipboard support (X11)",      required=True,  apt="xclip",      dnf="xclip",      pacman="xclip",      brew="xclip"),
-    Dep("rg",       "live grep (ripgrep)",           required=True,  apt="ripgrep",    dnf="ripgrep",    pacman="ripgrep",    brew="ripgrep"),
-    Dep("fd",       "file finding",                  required=True,  apt="fd-find",    dnf="fd-find",    pacman="fd",         brew="fd"),
-    Dep("node",     "Copilot and LSPs",              required=True,  apt="nodejs",     dnf="nodejs",     pacman="nodejs",     brew="node"),
-    Dep("lazygit",  "git UI (gitui extra)",          required=True,  apt="lazygit",    dnf="lazygit",    pacman="lazygit",    brew="lazygit"),
-    Dep("make",     "treesitter parser compilation", required=True,  apt="make",       dnf="make",       pacman="make",       brew="make"),
-    Dep("gcc",      "treesitter parser compilation", required=True,  apt="gcc",        dnf="gcc",        pacman="gcc",        brew="gcc"),
-    Dep("fzf",      "fuzzy finder (multiple plugins)", required=True, apt="fzf",       dnf="fzf",        pacman="fzf",        brew="fzf"),
-    Dep("gitui",    "gitui binary (gitui extra)",    required=False, apt="",           dnf="",           pacman="gitui",      brew="gitui"),
+    Dep("xclip",    "clipboard support (X11)",        required=True,  apt="xclip",      dnf="xclip",      pacman="xclip",      brew="xclip"),
+    Dep("rg",       "live grep (ripgrep)",             required=True,  apt="ripgrep",    dnf="ripgrep",    pacman="ripgrep",    brew="ripgrep"),
+    Dep("fd",       "file finding",                    required=True,  apt="fd-find",    dnf="fd-find",    pacman="fd",         brew="fd",    aliases=("fdfind",)),
+    Dep("node",     "Copilot and LSPs",                required=True,  apt="nodejs",     dnf="nodejs",     pacman="nodejs",     brew="node"),
+    Dep("lazygit",  "git UI (gitui extra)",            required=True,  apt="lazygit",    dnf="lazygit",    pacman="lazygit",    brew="lazygit"),
+    Dep("make",     "treesitter parser compilation",   required=True,  apt="make",       dnf="make",       pacman="make",       brew="make"),
+    Dep("gcc",      "treesitter parser compilation",   required=True,  apt="gcc",        dnf="gcc",        pacman="gcc",        brew="gcc"),
+    Dep("fzf",      "fuzzy finder (multiple plugins)", required=True,  apt="fzf",        dnf="fzf",        pacman="fzf",        brew="fzf"),
+    Dep("gitui",    "gitui binary (gitui extra)",      required=False, apt="",           dnf="",           pacman="gitui",      brew="gitui"),
 ]
 # fmt: on
 
@@ -100,11 +106,29 @@ def nvim_tarball_name():
         sys.exit(1)
 
 
-def install_nvim():
+def ensure_in_path(directory: Path):
+    """Append directory to PATH in the user's shell profile if not already present."""
+    if str(directory) in os.environ.get("PATH", "").split(":"):
+        return
+    shell = Path(os.environ.get("SHELL", "")).name
+    profile = {
+        "bash": Path.home() / ".bashrc",
+        "zsh": Path.home() / ".zshrc",
+    }.get(shell, Path.home() / ".profile")
+    line = f'\nexport PATH="{directory}:$PATH"\n'
+    existing = profile.read_text() if profile.exists() else ""
+    if str(directory) in existing:
+        return
+    with open(profile, "a") as f:
+        f.write(line)
+    print(f"  Added {directory} to {profile} — run 'source {profile}' or open a new shell.")
+
+
+def install_nvim() -> Path:
     if existing := shutil.which("nvim"):
         result = subprocess.run(["nvim", "--version"], capture_output=True, text=True)
         print(f"Neovim already installed at {existing}: {result.stdout.splitlines()[0]}")
-        return
+        return Path(existing)
 
     print("Installing Neovim...")
     LOCAL_BIN.mkdir(parents=True, exist_ok=True)
@@ -133,8 +157,8 @@ def install_nvim():
         dest.chmod(0o755)
         print(f"  Installed to {dest}")
 
-    if str(LOCAL_BIN) not in os.environ.get("PATH", "").split(":"):
-        print(f"  Warning: {LOCAL_BIN} is not in your PATH. Add it to your shell profile.")
+    ensure_in_path(LOCAL_BIN)
+    return LOCAL_BIN / "nvim"
 
 
 def symlink_config(config_dir: Path):
@@ -172,15 +196,26 @@ def setup_dap_python():
     print(f"  debugpy installed in {DAP_VENV}")
 
 
+def fix_fd_symlink():
+    """On apt systems, fd-find installs as fdfind. Create a fd symlink if needed."""
+    if not shutil.which("fd") and (fdfind := shutil.which("fdfind")):
+        LOCAL_BIN.mkdir(parents=True, exist_ok=True)
+        symlink = LOCAL_BIN / "fd"
+        if not symlink.exists():
+            symlink.symlink_to(fdfind)
+            print(f"  Created symlink: {symlink} -> {fdfind}")
+
+
 def handle_deps(install: bool):
     print("Checking system dependencies...")
     pm = detect_package_manager()
 
-    missing_required = [d for d in DEPS if d.required and not shutil.which(d.binary)]
-    missing_optional = [d for d in DEPS if not d.required and not shutil.which(d.binary)]
+    missing_required = [d for d in DEPS if d.required and not is_satisfied(d)]
+    missing_optional = [d for d in DEPS if not d.required and not is_satisfied(d)]
 
     if not missing_required and not missing_optional:
         print("  All dependencies satisfied.")
+        fix_fd_symlink()
         return
 
     if install:
@@ -197,6 +232,7 @@ def handle_deps(install: bool):
             unsupported = [d.binary for d in missing_required + missing_optional if not getattr(d, pm)]
             if unsupported:
                 print(f"  Warning: no {pm} package known for: {', '.join(unsupported)}. Install manually.")
+        fix_fd_symlink()
         return
 
     # Report only
@@ -217,11 +253,11 @@ def handle_deps(install: bool):
     print("\n  Re-run with --install-deps to install automatically.")
 
 
-def bootstrap_plugins():
+def bootstrap_plugins(nvim_bin: Path):
     print("Bootstrapping plugins (this may take a minute)...")
     try:
         subprocess.run(
-            ["nvim", "--headless", "+Lazy! sync", "+qa"],
+            [str(nvim_bin), "--headless", "+Lazy! sync", "+qa"],
             check=True,
             timeout=180,
         )
@@ -239,10 +275,12 @@ def main():
 
     check_requirements()
     handle_deps(install=args.install_deps)
-    install_nvim()
+    nvim_bin = install_nvim()
     symlink_config(config_dir)
     setup_dap_python()
-    bootstrap_plugins()
+    bootstrap_plugins(nvim_bin)
+    print("\nNote: LazyVim requires a Nerd Font for icons and the statusline to render correctly.")
+    print("  Install one from https://www.nerdfonts.com and set it in your terminal emulator.")
     print("\nDone! Launch nvim to get started.")
 
 
