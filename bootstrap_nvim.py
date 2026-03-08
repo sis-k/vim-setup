@@ -41,9 +41,12 @@ def is_satisfied(dep: Dep) -> bool:
     return any(shutil.which(b) for b in (dep.binary,) + dep.aliases)
 
 
+IS_WAYLAND = bool(os.environ.get("WAYLAND_DISPLAY"))
+
 # fmt: off
 DEPS = [
-    Dep("xclip",    "clipboard support (X11)",        required=True,  apt="xclip",      dnf="xclip",      pacman="xclip",      brew="xclip"),
+    Dep("wl-copy",  "clipboard support (Wayland)",     required=True,  apt="wl-clipboard", dnf="wl-clipboard", pacman="wl-clipboard", brew="wl-clipboard") if IS_WAYLAND else
+    Dep("xclip",    "clipboard support (X11)",         required=True,  apt="xclip",        dnf="xclip",        pacman="xclip",        brew="xclip"),
     Dep("rg",       "live grep (ripgrep)",             required=True,  apt="ripgrep",    dnf="ripgrep",    pacman="ripgrep",    brew="ripgrep"),
     Dep("fd",       "file finding",                    required=True,  apt="fd-find",    dnf="fd-find",    pacman="fd",         brew="fd",    aliases=("fdfind",)),
     Dep("node",     "Copilot and LSPs",                required=True,  apt="nodejs",     dnf="nodejs",     pacman="nodejs",     brew="node"),
