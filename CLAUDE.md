@@ -7,6 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a personal editor configuration repository containing:
 - `nvim/` — Neovim config based on [LazyVim](https://lazyvim.github.io/) starter template
 - `vim/.vimrc` — Legacy Vim config (YouCompleteMe, fzf, NERDTree)
+- `bootstrap_nvim.py` — Automated Neovim setup script
+- `bootstrap_vim.py` — Automated Vim setup script
 
 ## Neovim Architecture
 
@@ -39,7 +41,9 @@ Create a new file in `nvim/lua/plugins/` returning a lazy.nvim spec table. All f
 
 ## Bootstrap
 
-`bootstrap_nvim.py` sets up a new machine:
+Both scripts require Python 3.10+ and `git`. Run from the repo root.
+
+**Neovim** — `bootstrap_nvim.py`:
 1. Checks and optionally installs system dependencies (`--install-deps`)
 2. Downloads and installs the latest Neovim binary to `~/.local/bin`
 3. Symlinks `nvim/` → `~/.config/nvim` (backs up any existing config)
@@ -47,12 +51,26 @@ Create a new file in `nvim/lua/plugins/` returning a lazy.nvim spec table. All f
 5. Pre-installs all plugins headlessly via `Lazy! sync`
 
 ```bash
-python3 bootstrap_nvim.py                        # check deps, install everything
-python3 bootstrap_nvim.py --install-deps         # also auto-install missing deps
-python3 bootstrap_nvim.py --config-dir /tmp/test # use alternate config dir
+python3 bootstrap_nvim.py                         # check deps, install everything
+python3 bootstrap_nvim.py --install-deps          # also auto-install missing deps
+python3 bootstrap_nvim.py --config-dir /tmp/test  # use alternate config dir
 ```
 
 System deps are declared in the `DEPS` list at the top of the script — update it when adding plugins that require new binaries. Clipboard dep is selected automatically based on `$WAYLAND_DISPLAY` (xclip vs wl-clipboard).
+
+**Vim** — `bootstrap_vim.py`:
+1. Installs Vim via the system package manager if missing
+2. Symlinks `vim/.vimrc` → `~/.vimrc` (backs up any existing file)
+3. Clones fzf to `~/.fzf`, builds the binary, generates `~/.fzf.bash`
+4. Symlinks `~/.vim/pack/plugins/start/fzf` → `~/.fzf` (single clone for both)
+5. Installs `fzf.vim` and `NERDTree` as Vim 8 native packages
+
+```bash
+python3 bootstrap_vim.py                          # install everything
+python3 bootstrap_vim.py --vimrc /tmp/test-vimrc  # use alternate vimrc path
+```
+
+Add new Vim plugins to the `PACKAGES` list at the top of the script. YouCompleteMe requires [manual installation](https://github.com/ycm-core/YouCompleteMe#installation).
 
 ## Key Custom Bindings (nvim)
 

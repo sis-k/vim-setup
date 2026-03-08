@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
-"""Bootstrap Neovim with LazyVim configuration from this repository."""
+"""Bootstrap Neovim with LazyVim configuration from this repository.
+
+Steps performed:
+  1. Check system dependencies; optionally auto-install with --install-deps.
+  2. Download and install the latest Neovim binary to ~/.local/bin.
+  3. Symlink <repo>/nvim/ to ~/.config/nvim (backs up any existing config).
+  4. Create a Python venv at ~/.local/share/nvim/dap-python-env with debugpy.
+  5. Pre-install all plugins headlessly via lazy.nvim.
+
+Usage:
+  python3 bootstrap_nvim.py
+  python3 bootstrap_nvim.py --install-deps
+  python3 bootstrap_nvim.py --config-dir /tmp/nvim-test
+"""
 
 import argparse
 import os
@@ -13,6 +26,9 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+if sys.version_info < (3, 10):
+    sys.exit("Error: Python 3.10 or later is required.")
+
 NVIM_RELEASES_URL = "https://github.com/neovim/neovim/releases/latest/download"
 LOCAL_BIN = Path.home() / ".local" / "bin"
 DATA_DIR = Path.home() / ".local" / "share" / "nvim"
@@ -24,20 +40,28 @@ NVIM_CONFIG_SRC = REPO_DIR / "nvim"
 
 @dataclass
 class Dep:
-    # Binary to check with shutil.which()
+    """A system dependency required by the Neovim configuration.
+
+    binary      -- the executable name to check via shutil.which()
+    description -- human-readable description shown in reports
+    required    -- if True, flagged as required; otherwise optional
+    apt/dnf/pacman/brew -- package name for each supported package manager
+    aliases     -- alternative binary names that also satisfy this dep
+                   (e.g. 'fdfind' for 'fd' on apt systems)
+    """
+
     binary: str
     description: str
     required: bool
-    # Package name per package manager; omit a key to mark as unsupported
     apt: str = ""
     dnf: str = ""
     pacman: str = ""
     brew: str = ""
-    # Alternative binary names that also satisfy this dep (e.g. fdfind for fd on apt)
     aliases: tuple = ()
 
 
 def is_satisfied(dep: Dep) -> bool:
+    """Return True if the dep's binary (or any alias) is found on PATH."""
     return any(shutil.which(b) for b in (dep.binary,) + dep.aliases)
 
 
@@ -60,14 +84,18 @@ DEPS = [
 
 
 def detect_package_manager() -> str | None:
+    """Return the first supported package manager found on PATH, or None."""
     for pm in ("apt", "dnf", "pacman", "brew"):
         if shutil.which(pm):
             return pm
     return None
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Bootstrap Neovim with LazyVim configuration.")
+def parse_args() -> argparse.Namespace:
+    """Parse and return command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "--config-dir",
         type=Path,
@@ -83,19 +111,21 @@ def parse_args():
     return parser.parse_args()
 
 
-def run(cmd, **kwargs):
+def run(cmd: list, **kwargs) -> None:
+    """Print and execute a shell command, raising on non-zero exit."""
     print(f"  $ {' '.join(str(c) for c in cmd)}")
     subprocess.run(cmd, check=True, **kwargs)
 
 
-def check_requirements():
+def check_requirements() -> None:
+    """Exit early if mandatory bootstrap tools (git) are missing."""
     missing = [dep for dep in ("git",) if not shutil.which(dep)]
     if missing:
-        print(f"Error: missing required tools: {', '.join(missing)}")
-        sys.exit(1)
+        sys.exit(f"Error: missing required tools: {', '.join(missing)}")
 
 
-def nvim_tarball_name():
+def nvim_tarball_name() -> str:
+    """Return the correct Neovim release tarball name for the current platform."""
     system = platform.system()
     machine = platform.machine()
     if system == "Linux":
@@ -105,11 +135,10 @@ def nvim_tarball_name():
         arch = "arm64" if machine == "arm64" else "x86_64"
         return f"nvim-macos-{arch}.tar.gz"
     else:
-        print(f"Unsupported OS: {system}")
-        sys.exit(1)
+        sys.exit(f"Error: unsupported OS '{system}'. Install Neovim manually.")
 
 
-def ensure_in_path(directory: Path):
+def ensure_in_path(directory: Path) -> None:
     """Append directory to PATH in the user's shell profile if not already present."""
     if str(directory) in os.environ.get("PATH", "").split(":"):
         return
@@ -128,6 +157,10 @@ def ensure_in_path(directory: Path):
 
 
 def install_nvim() -> Path:
+    """Install the latest Neovim binary to LOCAL_BIN and return its path.
+
+    If nvim is already on PATH, skips the download and returns the existing path.
+    """
     if existing := shutil.which("nvim"):
         result = subprocess.run(["nvim", "--version"], capture_output=True, text=True)
         print(f"Neovim already installed at {existing}: {result.stdout.splitlines()[0]}")
@@ -140,40 +173,49 @@ def install_nvim() -> Path:
     url = f"{NVIM_RELEASES_URL}/{tarball}"
     print(f"  Downloading {url}")
 
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp_path = Path(tmp)
-        archive = tmp_path / tarball
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            archive = tmp_path / tarball
 
-        with urllib.request.urlopen(url) as resp, open(archive, "wb") as f:
-            shutil.copyfileobj(resp, f)
+            with urllib.request.urlopen(url) as resp, open(archive, "wb") as f:
+                shutil.copyfileobj(resp, f)
 
-        with tarfile.open(archive) as tar:
-            tar.extractall(tmp_path)
+            with tarfile.open(archive) as tar:
+                tar.extractall(tmp_path)
 
-        extracted = next(tmp_path.glob("nvim-*/bin/nvim"), None)
-        if not extracted:
-            print("Error: could not find nvim binary in archive.")
-            sys.exit(1)
+            extracted = next(tmp_path.glob("nvim-*/bin/nvim"), None)
+            if not extracted:
+                sys.exit("Error: could not find nvim binary in downloaded archive.")
 
-        dest = LOCAL_BIN / "nvim"
-        shutil.copy2(extracted, dest)
-        dest.chmod(0o755)
-        print(f"  Installed to {dest}")
+            dest = LOCAL_BIN / "nvim"
+            shutil.copy2(extracted, dest)
+            dest.chmod(0o755)
+            print(f"  Installed to {dest}")
+    except urllib.error.URLError as e:
+        sys.exit(f"Error: failed to download Neovim: {e}")
 
     ensure_in_path(LOCAL_BIN)
     return LOCAL_BIN / "nvim"
 
 
-def symlink_config(config_dir: Path):
+def symlink_config(config_dir: Path) -> None:
+    """Symlink config_dir to the repo's nvim/ directory.
+
+    If config_dir already exists as a directory, it is backed up with a .bak suffix
+    before the symlink is created. An existing symlink pointing elsewhere is replaced.
+    """
     print("Setting up Neovim config...")
 
     if config_dir.is_symlink():
-        existing = config_dir.resolve()
-        if existing == NVIM_CONFIG_SRC:
+        target = Path(os.readlink(config_dir))
+        if not target.is_absolute():
+            target = config_dir.parent / target
+        if target == NVIM_CONFIG_SRC:
             print(f"  Already symlinked: {config_dir} -> {NVIM_CONFIG_SRC}")
             return
         config_dir.unlink()
-        print(f"  Removed existing symlink -> {existing}")
+        print(f"  Removed existing symlink -> {target}")
     elif config_dir.exists():
         backup = config_dir.with_name(config_dir.name + ".bak")
         shutil.move(str(config_dir), str(backup))
@@ -185,7 +227,12 @@ def symlink_config(config_dir: Path):
     print(f"  Symlinked: {config_dir} -> {NVIM_CONFIG_SRC}")
 
 
-def setup_dap_python():
+def setup_dap_python() -> None:
+    """Create a Python venv at DAP_VENV and install debugpy into it.
+
+    The venv path is referenced by nvim/lua/config/autocmds.lua via
+    vim.fn.stdpath('data') .. '/dap-python-env/bin/python3'.
+    """
     print("Setting up dap-python virtual environment...")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -199,8 +246,8 @@ def setup_dap_python():
     print(f"  debugpy installed in {DAP_VENV}")
 
 
-def fix_fd_symlink():
-    """On apt systems, fd-find installs as fdfind. Create a fd symlink if needed."""
+def fix_fd_symlink() -> None:
+    """On apt systems, fd-find installs as fdfind. Create a ~/.local/bin/fd symlink if needed."""
     if not shutil.which("fd") and (fdfind := shutil.which("fdfind")):
         LOCAL_BIN.mkdir(parents=True, exist_ok=True)
         symlink = LOCAL_BIN / "fd"
@@ -209,7 +256,12 @@ def fix_fd_symlink():
             print(f"  Created symlink: {symlink} -> {fdfind}")
 
 
-def handle_deps(install: bool):
+def handle_deps(install: bool) -> None:
+    """Check system dependencies and either report or install missing ones.
+
+    If install is True, attempts to install via the detected package manager.
+    Otherwise, prints a report and a hint to re-run with --install-deps.
+    """
     print("Checking system dependencies...")
     pm = detect_package_manager()
 
@@ -256,7 +308,12 @@ def handle_deps(install: bool):
     print("\n  Re-run with --install-deps to install automatically.")
 
 
-def bootstrap_plugins(nvim_bin: Path):
+def bootstrap_plugins(nvim_bin: Path) -> None:
+    """Run a headless Neovim session to pre-install all lazy.nvim plugins.
+
+    Uses the full path to nvim_bin so this works even before PATH is reloaded
+    in the current shell session.
+    """
     print("Bootstrapping plugins (this may take a minute)...")
     try:
         subprocess.run(
@@ -268,12 +325,19 @@ def bootstrap_plugins(nvim_bin: Path):
         print("  Warning: plugin sync timed out. Run ':Lazy sync' manually on first launch.")
 
 
-def main():
+def main() -> None:
+    """Entry point: parse arguments, validate inputs, and run all bootstrap steps."""
     args = parse_args()
-    config_dir = args.config_dir.resolve()
+    config_dir = args.config_dir.expanduser().absolute()
+
+    if not NVIM_CONFIG_SRC.is_dir():
+        sys.exit(f"Error: nvim config source not found at {NVIM_CONFIG_SRC}. Run from the repo root.")
+
+    if config_dir == NVIM_CONFIG_SRC:
+        sys.exit("Error: --config-dir cannot be the same as the repo's nvim/ directory.")
 
     print("=== Neovim Bootstrap ===\n")
-    if config_dir != Path.home() / ".config" / "nvim":
+    if config_dir != (Path.home() / ".config" / "nvim").absolute():
         print(f"  Using custom config dir: {config_dir}\n")
 
     check_requirements()

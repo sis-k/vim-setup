@@ -22,7 +22,6 @@ set foldlevel=99
 nnoremap <space> za
 
 set encoding=utf-8
-set rtp+=~/projects/tools/fzf/
 map <C-F>      :FZF<CR>
 
 map <C-S>      :w<CR>
