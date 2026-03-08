@@ -6,4 +6,4 @@
 --
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
-require("dap-python").setup("/data/projects/tools/env/bin/python3")
+require("dap-python").setup(vim.fn.stdpath("data") .. "/dap-python-env/bin/python3")
