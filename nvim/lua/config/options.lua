@@ -6,6 +6,8 @@
 vim.opt.shiftwidth = 4 -- Size of an indent
 vim.opt.tabstop = 4 -- size of tabstop
 
+vim.g.lazyvim_picker = "snacks"
+
 -- Leader keys etc.
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
