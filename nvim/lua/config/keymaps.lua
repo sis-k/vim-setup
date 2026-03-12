@@ -35,6 +35,9 @@ map("i", "<S-Down>", "<esc>v<Down>", { desc = "Select text down" })
 map("i", "<S-Left>", "<esc>v<Left>", { desc = "Select text left" })
 map("i", "<S-Right>", "<esc>v<Right>", { desc = "Select text right" })
 
+map("n", "<leader>os", ":OverseerShell<cr>", { desc = "Overseer shell" })
+map("n", "<leader>or", ":OverseerRun<cr>", { desc = "Overseer run" })
+
 -- File operations
 vim.api.nvim_create_user_command("CopyFullPath", function()
     local path = vim.fn.expand("%:p")
