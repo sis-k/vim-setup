@@ -7,8 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a personal editor configuration repository containing:
 - `nvim/` — Neovim config based on [LazyVim](https://lazyvim.github.io/) starter template
 - `vim/.vimrc` — Legacy Vim config (YouCompleteMe, fzf, NERDTree)
+- `tmux/.tmux.conf` — tmux config (vi keys, mouse, tpm)
 - `bootstrap_nvim.py` — Automated Neovim setup script
 - `bootstrap_vim.py` — Automated Vim setup script
+- `bootstrap_tmux.py` — Automated tmux setup script
 
 ## Neovim Architecture
 
@@ -21,6 +23,7 @@ The nvim config follows the LazyVim structure:
 - `lua/config/autocmds.lua` — Custom autocmds; sets up `dap-python` using `vim.fn.stdpath("data") .. "/dap-python-env/bin/python3"`
 - `lua/plugins/` — Custom plugin specs; each file returns a lazy.nvim spec table
   - `example.lua` — Template/reference file (skipped via early `return {}`)
+  - `mason.lua` — Explicit Mason `ensure_installed` for extra formatters/linters
   - `vstasks.lua` — VS Code tasks integration via `vs-tasks.nvim` with snacks picker
   - `dashboard.lua` — Customizes snacks.nvim dashboard header
 
@@ -71,6 +74,22 @@ python3 bootstrap_vim.py --vimrc /tmp/test-vimrc  # use alternate vimrc path
 ```
 
 Add new Vim plugins to the `PACKAGES` list at the top of the script. YouCompleteMe requires [manual installation](https://github.com/ycm-core/YouCompleteMe#installation).
+
+**tmux** — `bootstrap_tmux.py`:
+1. Checks and optionally installs tmux (`--install-deps`)
+2. Clones or updates tpm to `~/.tmux/plugins/tpm`
+3. Symlinks `tmux/.tmux.conf` → `~/.tmux.conf` (backs up any existing file)
+4. Installs all tpm plugins headlessly
+
+```bash
+python3 bootstrap_tmux.py                               # install everything
+python3 bootstrap_tmux.py --install-deps                # also auto-install tmux
+python3 bootstrap_tmux.py --tmux-conf /tmp/test.conf    # use alternate conf path
+```
+
+## Mason Packages (nvim)
+
+LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyright` from `lang.python`, `clangd` from `lang.clangd`). Additional tools (formatters, linters) are pinned explicitly in `lua/plugins/mason.lua` via `ensure_installed`. Add entries there when a new formatter or linter is needed.
 
 ## Key Custom Bindings (nvim)
 
