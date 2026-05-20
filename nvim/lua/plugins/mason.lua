@@ -4,7 +4,7 @@
 -- List only additional formatters / linters here.
 return {
     {
-        "williamboman/mason.nvim",
+        "mason-org/mason.nvim",
         opts = {
             ensure_installed = {
                 "stylua",
