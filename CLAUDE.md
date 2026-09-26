@@ -26,6 +26,7 @@ The nvim config follows the LazyVim structure:
   - `mason.lua` — Explicit Mason `ensure_installed` for extra formatters/linters
   - `vstasks.lua` — VS Code tasks integration via `vs-tasks.nvim` with snacks picker
   - `dashboard.lua` — Customizes snacks.nvim dashboard header
+  - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled
 
