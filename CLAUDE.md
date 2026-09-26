@@ -29,7 +29,7 @@ The nvim config follows the LazyVim structure:
 
 ## LazyVim Extras Enabled
 
-Configured in `lazyvim.json`: copilot, copilot-chat, luasnip, dap.core, dap.nlua, overseer, clangd, git, markdown, python, gitui, project.
+Configured in `lazyvim.json`: luasnip, dap.core, dap.nlua, overseer, clangd, git, markdown, python, gitui, project.
 
 ## Formatting
 
@@ -96,5 +96,4 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 - `<leader><arrows>` — Window navigation
 - `<S-PageUp/Down>` — Buffer prev/next
 - `W` / `Y` — Select/yank current word
-- `<leader>cp` / `<leader>cs` — Copilot panel/status
 - `<leader>cf` / `<leader>cF` — Copy full/relative path to clipboard

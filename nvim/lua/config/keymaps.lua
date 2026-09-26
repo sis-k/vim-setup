@@ -8,10 +8,6 @@ map("n", "<leader><Right>", "<C-w>l", { desc = "Go to Right Window", remap = tru
 map("n", "<leader><Down>", "<C-w>j", { desc = "Go to Upper Window", remap = true })
 map("n", "<leader><Up>", "<C-w>k", { desc = "Go to Lower Window", remap = true })
 
--- Copilot
-vim.keymap.set("n", "<leader>cp", ":Copilot panel<cr>")
-vim.keymap.set("n", "<leader>cs", ":Copilot status<cr>")
-
 -- Resize window using <ctrl> hjkl keys
 -- map("n", "<C-j>", "<cmd>resize +2<cr>", { desc = "Increase Window Height" })
 -- map("n", "<C-k>", "<cmd>resize -2<cr>", { desc = "Decrease Window Height" })

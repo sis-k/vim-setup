@@ -79,7 +79,7 @@ DEPS = [d for d in [
     CLIPBOARD_DEP,
     Dep("rg",       "live grep (ripgrep)",             required=True,  apt="ripgrep",    dnf="ripgrep",    pacman="ripgrep",    brew="ripgrep"),
     Dep("fd",       "file finding",                    required=True,  apt="fd-find",    dnf="fd-find",    pacman="fd",         brew="fd",    aliases=("fdfind",)),
-    Dep("node",     "Copilot and LSPs",                required=True,  apt="nodejs",     dnf="nodejs",     pacman="nodejs",     brew="node"),
+    Dep("node",     "LSPs (Mason)",                   required=True,  apt="nodejs",     dnf="nodejs",     pacman="nodejs",     brew="node"),
     Dep("lazygit",  "git UI (gitui extra)",            required=True,  apt="lazygit",    dnf="lazygit",    pacman="lazygit",    brew="lazygit"),
     Dep("make",     "treesitter parser compilation",   required=True,  apt="make",       dnf="make",       pacman="make",       brew="make"),
     Dep("gcc",      "treesitter parser compilation",   required=True,  apt="gcc",        dnf="gcc",        pacman="gcc",        brew="gcc"),
