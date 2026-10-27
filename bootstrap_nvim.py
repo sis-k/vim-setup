@@ -6,7 +6,7 @@ Steps performed:
   2. Download and install the latest Neovim binary to ~/.local/bin.
   3. Symlink <repo>/nvim/ to ~/.config/nvim (backs up any existing config).
   4. Create a Python venv at ~/.local/share/nvim/dap-python-env with debugpy.
-  5. Pre-install all plugins headlessly via lazy.nvim.
+  5. Pre-install all plugins headlessly via lazy.nvim, pinned to lazy-lock.json.
 
 Usage:
   python3 bootstrap_nvim.py
@@ -84,6 +84,9 @@ DEPS = [d for d in [
     Dep("make",     "treesitter parser compilation",   required=True,  apt="make",       dnf="make",       pacman="make",       brew="make"),
     Dep("gcc",      "treesitter parser compilation",   required=True,  apt="gcc",        dnf="gcc",        pacman="gcc",        brew="gcc"),
     Dep("fzf",      "fuzzy finder (multiple plugins)", required=True,  apt="fzf",        dnf="fzf",        pacman="fzf",        brew="fzf"),
+    Dep("curl",     "Mason / treesitter downloads",    required=True,  apt="curl",       dnf="curl",       pacman="curl",       brew="curl"),
+    Dep("tar",      "Mason / treesitter archives",     required=True,  apt="tar",        dnf="tar",        pacman="tar",        brew="gnu-tar"),
+    Dep("unzip",    "Mason package extraction",        required=True,  apt="unzip",      dnf="unzip",      pacman="unzip",      brew="unzip"),
     Dep("gitui",    "gitui binary (gitui extra)",      required=False, apt="",           dnf="",           pacman="gitui",      brew="gitui"),
 ] if d is not None]
 # fmt: on
@@ -317,18 +320,20 @@ def handle_deps(install: bool) -> None:
 def bootstrap_plugins(nvim_bin: Path) -> None:
     """Run a headless Neovim session to pre-install all lazy.nvim plugins.
 
+    Uses `Lazy! restore` so plugins are pinned to the commits in the repo's
+    lazy-lock.json; `sync` would update them and rewrite the tracked lock file.
     Uses the full path to nvim_bin so this works even before PATH is reloaded
     in the current shell session.
     """
     print("Bootstrapping plugins (this may take a minute)...")
     try:
         subprocess.run(
-            [str(nvim_bin), "--headless", "+Lazy! sync", "+qa"],
+            [str(nvim_bin), "--headless", "+Lazy! restore", "+qa"],
             check=True,
             timeout=180,
         )
     except subprocess.TimeoutExpired:
-        print("  Warning: plugin sync timed out. Run ':Lazy sync' manually on first launch.")
+        print("  Warning: plugin sync timed out. Run ':Lazy restore' manually on first launch.")
 
 
 def main() -> None:

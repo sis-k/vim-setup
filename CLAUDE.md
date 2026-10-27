@@ -52,7 +52,7 @@ Both scripts require Python 3.10+ and `git`. Run from the repo root.
 2. Downloads and installs the latest Neovim binary to `~/.local/bin`
 3. Symlinks `nvim/` → `~/.config/nvim` (backs up any existing config)
 4. Creates a Python venv at `~/.local/share/nvim/dap-python-env` with `debugpy`
-5. Pre-installs all plugins headlessly via `Lazy! sync`
+5. Pre-installs all plugins headlessly via `Lazy! restore` (pinned to `lazy-lock.json`)
 
 ```bash
 python3 bootstrap_nvim.py                         # check deps, install everything
