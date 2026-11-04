@@ -5,8 +5,7 @@ Steps performed:
   1. Check system dependencies; optionally auto-install with --install-deps.
   2. Download and install the latest Neovim binary to ~/.local/bin.
   3. Symlink <repo>/nvim/ to ~/.config/nvim (backs up any existing config).
-  4. Create a Python venv at ~/.local/share/nvim/dap-python-env with debugpy.
-  5. Pre-install all plugins headlessly via lazy.nvim, pinned to lazy-lock.json.
+  4. Pre-install all plugins headlessly via lazy.nvim, pinned to lazy-lock.json.
 
 Usage:
   python3 bootstrap_nvim.py
@@ -31,8 +30,6 @@ if sys.version_info < (3, 10):
 
 NVIM_RELEASES_URL = "https://github.com/neovim/neovim/releases/latest/download"
 LOCAL_BIN = Path.home() / ".local" / "bin"
-DATA_DIR = Path.home() / ".local" / "share" / "nvim"
-DAP_VENV = DATA_DIR / "dap-python-env"
 
 REPO_DIR = Path(__file__).resolve().parent
 NVIM_CONFIG_SRC = REPO_DIR / "nvim"
@@ -87,6 +84,7 @@ DEPS = [d for d in [
     Dep("curl",     "Mason / treesitter downloads",    required=True,  apt="curl",       dnf="curl",       pacman="curl",       brew="curl"),
     Dep("tar",      "Mason / treesitter archives",     required=True,  apt="tar",        dnf="tar",        pacman="tar",        brew="gnu-tar"),
     Dep("unzip",    "Mason package extraction",        required=True,  apt="unzip",      dnf="unzip",      pacman="unzip",      brew="unzip"),
+    Dep("uvx",      "Python debug adapter (uv)",       required=True,  apt="",           dnf="uv",         pacman="uv",         brew="uv"),
     Dep("gitui",    "gitui binary (gitui extra)",      required=False, apt="",           dnf="",           pacman="gitui",      brew="gitui"),
 ] if d is not None]
 # fmt: on
@@ -236,25 +234,6 @@ def symlink_config(config_dir: Path) -> None:
     print(f"  Symlinked: {config_dir} -> {NVIM_CONFIG_SRC}")
 
 
-def setup_dap_python() -> None:
-    """Create a Python venv at DAP_VENV and install debugpy into it.
-
-    The venv path is referenced by nvim/lua/config/autocmds.lua via
-    vim.fn.stdpath('data') .. '/dap-python-env/bin/python3'.
-    """
-    print("Setting up dap-python virtual environment...")
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-    if not (DAP_VENV / "bin" / "python3").exists():
-        run([sys.executable, "-m", "venv", str(DAP_VENV)])
-    else:
-        print(f"  Venv already exists at {DAP_VENV}")
-
-    pip = DAP_VENV / "bin" / "pip"
-    run([str(pip), "install", "--quiet", "debugpy"])
-    print(f"  debugpy installed in {DAP_VENV}")
-
-
 def fix_fd_symlink() -> None:
     """On apt systems, fd-find installs as fdfind. Create a ~/.local/bin/fd symlink if needed."""
     if not shutil.which("fd") and (fdfind := shutil.which("fdfind")):
@@ -355,7 +334,6 @@ def main() -> None:
     handle_deps(install=args.install_deps)
     nvim_bin = install_nvim()
     symlink_config(config_dir)
-    setup_dap_python()
     bootstrap_plugins(nvim_bin)
     print("\nNote: LazyVim requires a Nerd Font for icons and the statusline to render correctly.")
     print("  Install one from https://www.nerdfonts.com and set it in your terminal emulator.")

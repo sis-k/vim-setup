@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec uvx --from debugpy debugpy-adapter "$@"

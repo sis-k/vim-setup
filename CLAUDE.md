@@ -20,10 +20,12 @@ The nvim config follows the LazyVim structure:
 - `lua/config/lazy.lua` — Plugin manager setup; imports LazyVim defaults + local `plugins/`
 - `lua/config/options.lua` — Vim options loaded before plugins (4-space indent, snacks picker, autoformat off, diagnostics disabled by default)
 - `lua/config/keymaps.lua` — Custom keymaps loaded on `VeryLazy` event
-- `lua/config/autocmds.lua` — Custom autocmds; sets up `dap-python` using `vim.fn.stdpath("data") .. "/dap-python-env/bin/python3"`
+- `lua/config/autocmds.lua` — Custom autocmds (none currently)
+- `bin/debugpy-adapter` — Wrapper that runs the Python debug adapter through `uvx`
 - `lua/plugins/` — Custom plugin specs; each file returns a lazy.nvim spec table
   - `example.lua` — Template/reference file (skipped via early `return {}`)
   - `mason.lua` — Explicit Mason `ensure_installed` for extra formatters/linters
+  - `python.lua` — Points `dap-python` at `bin/debugpy-adapter`; the debugged program runs on the project's interpreter (`$VIRTUAL_ENV`, `$CONDA_PREFIX`, or a venv folder such as `.venv`)
   - `vstasks.lua` — VS Code tasks integration via `vs-tasks.nvim` with snacks picker
   - `dashboard.lua` — Customizes snacks.nvim dashboard header
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
@@ -51,8 +53,7 @@ Both scripts require Python 3.10+ and `git`. Run from the repo root.
 1. Checks and optionally installs system dependencies (`--install-deps`)
 2. Downloads and installs the latest Neovim binary to `~/.local/bin`
 3. Symlinks `nvim/` → `~/.config/nvim` (backs up any existing config)
-4. Creates a Python venv at `~/.local/share/nvim/dap-python-env` with `debugpy`
-5. Pre-installs all plugins headlessly via `Lazy! restore` (pinned to `lazy-lock.json`)
+4. Pre-installs all plugins headlessly via `Lazy! restore` (pinned to `lazy-lock.json`)
 
 ```bash
 python3 bootstrap_nvim.py                         # check deps, install everything
@@ -90,7 +91,7 @@ python3 bootstrap_tmux.py --tmux-conf /tmp/test.conf    # use alternate conf pat
 
 ## Mason Packages (nvim)
 
-LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyright` from `lang.python`, `clangd` from `lang.clangd`). Additional tools (formatters, linters) are pinned explicitly in `lua/plugins/mason.lua` via `ensure_installed`. Add entries there when a new formatter or linter is needed.
+LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyright` from `lang.python`, `clangd` from `lang.clangd`). The Python debug adapter is the exception: it runs through `uvx`, not Mason. Additional tools (formatters, linters) are pinned explicitly in `lua/plugins/mason.lua` via `ensure_installed`. Add entries there when a new formatter or linter is needed.
 
 ## Key Custom Bindings (nvim)
 
