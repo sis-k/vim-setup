@@ -62,7 +62,7 @@ python3 bootstrap_nvim.py --install-deps          # also auto-install missing de
 python3 bootstrap_nvim.py --config-dir /tmp/test  # use alternate config dir
 ```
 
-System deps are declared in the `DEPS` list at the top of the script — update it when adding plugins that require new binaries. Clipboard dep is selected automatically based on `$WAYLAND_DISPLAY` (xclip vs wl-clipboard).
+System deps are declared in the `DEPS` list at the top of the script — update it when adding plugins that require new binaries. A dep with no package for a manager can set `install_script`, which `--install-deps` runs instead: `uv` (needed by the Python debugger and the notebook commands) has no apt package, so it uses uv's official installer there, and its binary lands in `~/.local/bin`. Clipboard dep is selected automatically based on `$WAYLAND_DISPLAY` (xclip vs wl-clipboard).
 
 **Vim** — `bootstrap_vim.py`:
 1. Installs Vim via the system package manager if missing

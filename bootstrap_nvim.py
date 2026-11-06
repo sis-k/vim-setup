@@ -30,6 +30,7 @@ if sys.version_info < (3, 10):
 
 NVIM_RELEASES_URL = "https://github.com/neovim/neovim/releases/latest/download"
 LOCAL_BIN = Path.home() / ".local" / "bin"
+UV_INSTALL_SCRIPT = "curl -LsSf https://astral.sh/uv/install.sh | sh"
 
 REPO_DIR = Path(__file__).resolve().parent
 NVIM_CONFIG_SRC = REPO_DIR / "nvim"
@@ -45,6 +46,8 @@ class Dep:
     apt/dnf/pacman/brew -- package name for each supported package manager
     aliases     -- alternative binary names that also satisfy this dep
                    (e.g. 'fdfind' for 'fd' on apt systems)
+    install_script -- shell command used with --install-deps when the package
+                   manager has no package for this dep
     """
 
     binary: str
@@ -55,6 +58,7 @@ class Dep:
     pacman: str = ""
     brew: str = ""
     aliases: tuple = ()
+    install_script: str = ""
 
 
 def is_satisfied(dep: Dep) -> bool:
@@ -84,7 +88,7 @@ DEPS = [d for d in [
     Dep("curl",     "Mason / treesitter downloads",    required=True,  apt="curl",       dnf="curl",       pacman="curl",       brew="curl"),
     Dep("tar",      "Mason / treesitter archives",     required=True,  apt="tar",        dnf="tar",        pacman="tar",        brew="gnu-tar"),
     Dep("unzip",    "Mason package extraction",        required=True,  apt="unzip",      dnf="unzip",      pacman="unzip",      brew="unzip"),
-    Dep("uvx",      "Python debug adapter (uv)",       required=True,  apt="",           dnf="uv",         pacman="uv",         brew="uv"),
+    Dep("uvx",      "Python debugger, notebooks (uv)", required=True,  apt="",           dnf="uv",         pacman="uv",         brew="uv",    install_script=UV_INSTALL_SCRIPT),
     Dep("gitui",    "gitui binary (gitui extra)",      required=False, apt="",           dnf="",           pacman="gitui",      brew="gitui"),
 ] if d is not None]
 # fmt: on
@@ -244,6 +248,13 @@ def fix_fd_symlink() -> None:
             print(f"  Created symlink: {symlink} -> {fdfind}")
 
 
+def install_hint(dep: Dep, pm: str | None) -> str:
+    """Return the command to suggest for installing a missing dep."""
+    if pm and getattr(dep, pm):
+        return f"{pm} install {getattr(dep, pm)}"
+    return dep.install_script or "install manually"
+
+
 def handle_deps(install: bool) -> None:
     """Check system dependencies and either report or install missing ones.
 
@@ -272,9 +283,18 @@ def handle_deps(install: bool) -> None:
                 cmd = sudo + [pm, "install"] + ([install_flag] if install_flag else []) + to_install
                 print(f"  Installing via {pm}: {', '.join(to_install)}")
                 run(cmd)
-            unsupported = [d.binary for d in missing_required + missing_optional if not getattr(d, pm)]
-            if unsupported:
-                print(f"  Warning: no {pm} package known for: {', '.join(unsupported)}. Install manually.")
+        for dep in missing_required + missing_optional:
+            if pm and getattr(dep, pm):
+                continue
+            if not dep.install_script:
+                if pm:
+                    print(f"  Warning: no {pm} package known for: {dep.binary}. Install manually.")
+                continue
+            print(f"  Installing {dep.binary} with its install script")
+            # Check for the binary, because `curl | sh` exits 0 even when the download fails.
+            subprocess.run(["sh", "-c", dep.install_script], check=False)
+            if not (shutil.which(dep.binary) or shutil.which(dep.binary, path=str(LOCAL_BIN))):
+                print(f"  Warning: could not install {dep.binary}. Run manually: {dep.install_script}")
         fix_fd_symlink()
         return
 
@@ -282,16 +302,12 @@ def handle_deps(install: bool) -> None:
     if missing_required:
         print("  Missing required dependencies:")
         for d in missing_required:
-            pkg_hint = getattr(d, pm) if pm and getattr(d, pm) else d.binary
-            install_cmd = f"{pm} install {pkg_hint}" if pm else d.binary
-            print(f"    - {d.binary:12} {d.description} → {install_cmd}")
+            print(f"    - {d.binary:12} {d.description} → {install_hint(d, pm)}")
 
     if missing_optional:
         print("  Missing optional dependencies:")
         for d in missing_optional:
-            pkg_hint = getattr(d, pm) if pm and getattr(d, pm) else d.binary
-            install_cmd = f"{pm} install {pkg_hint}" if pm else d.binary
-            print(f"    - {d.binary:12} {d.description} → {install_cmd}")
+            print(f"    - {d.binary:12} {d.description} → {install_hint(d, pm)}")
 
     print("\n  Re-run with --install-deps to install automatically.")
 
