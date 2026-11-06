@@ -23,3 +23,18 @@ Opening an `.ipynb` file shows it as read-only `# %%` Python, so `:w` can't chan
 | `<leader>je` | `:NbScript [path]` | Export the notebook to a `.py` next to it, or to `path`. Never overwrites a file. |
 | `<leader>js` | `:NbServe` | Start JupyterLab from the project root, or reopen its page if it's running. |
 | `<leader>jq` | `:NbStop` | Stop the server and its kernels. It also stops when Neovim exits. |
+
+### C++ and CMake
+
+CMake projects use `CMakePresets.json` if they have one, otherwise a kit from `nvim/cmake-kits.json` or the project's own `cmake-kits.json`, which sets the compilers and an optional `toolchainFile`. Cross-compilers need to be on `PATH`, which is also how `clangd` learns to trust them. Start Neovim from a shell that has them.
+
+| Keys | Action |
+|---|---|
+| `<leader>mp` / `<leader>mP` | Select a configure / build preset |
+| `<leader>mk` | Select a kit |
+| `<leader>mt` / `<leader>mT` | Select a build type / build target |
+| `<leader>mg` / `<leader>mG` | Configure / configure with options, such as `-DFOO=1` |
+| `<leader>mb` | Build |
+| `<leader>mc` / `<leader>mx` | Clean / stop |
+
+To debug on a target, run `gdbserver` there, press `<leader>dc` and choose `gdbserver: connect to target`. It asks for the local program with symbols, the address and the `gdb` to use, such as `gdb-multiarch`, and remembers them for the session.

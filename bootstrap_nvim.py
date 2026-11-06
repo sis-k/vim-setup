@@ -90,6 +90,9 @@ DEPS = [d for d in [
     Dep("unzip",    "Mason package extraction",        required=True,  apt="unzip",      dnf="unzip",      pacman="unzip",      brew="unzip"),
     Dep("uvx",      "Python debugger, notebooks (uv)", required=True,  apt="",           dnf="uv",         pacman="uv",         brew="uv",    install_script=UV_INSTALL_SCRIPT),
     Dep("gitui",    "gitui binary (gitui extra)",      required=False, apt="",           dnf="",           pacman="gitui",      brew="gitui"),
+    Dep("cmake",    "CMake projects",                  required=False, apt="cmake",      dnf="cmake",      pacman="cmake",      brew="cmake"),
+    Dep("ninja",    "CMake kits and presets",          required=False, apt="ninja-build", dnf="ninja-build", pacman="ninja",    brew="ninja"),
+    Dep("gdb",      "gdbserver debugging",             required=False, apt="gdb",        dnf="gdb",        pacman="gdb",        brew="gdb"),
 ] if d is not None]
 # fmt: on
 

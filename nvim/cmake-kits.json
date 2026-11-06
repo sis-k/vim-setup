@@ -1,0 +1,14 @@
+[
+  {
+    "name": "arm-none-eabi",
+    "generator": "Ninja",
+    "compilers": {
+      "C": "arm-none-eabi-gcc",
+      "CXX": "arm-none-eabi-g++"
+    },
+    "cmakeSettings": {
+      "CMAKE_SYSTEM_NAME": "Generic",
+      "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY"
+    }
+  }
+]
