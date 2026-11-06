@@ -21,6 +21,7 @@ The nvim config follows the LazyVim structure:
 - `lua/config/options.lua` — Vim options loaded before plugins (4-space indent, snacks picker, autoformat off, diagnostics disabled by default)
 - `lua/config/keymaps.lua` — Custom keymaps loaded on `VeryLazy` event
 - `lua/config/autocmds.lua` — Custom autocmds (none currently)
+- `lua/config/notebook.lua` — Loaded from `init.lua`. Shows `.ipynb` files as read-only `# %%` Python through `uvx jupytext`, exports scripts with `:NbScript [path]` (never overwrites), and starts JupyterLab from the project root with `:NbServe` through `uv run --with jupyterlab`
 - `bin/debugpy-adapter` — Wrapper that runs the Python debug adapter through `uvx`
 - `lua/plugins/` — Custom plugin specs; each file returns a lazy.nvim spec table
   - `example.lua` — Template/reference file (skipped via early `return {}`)
@@ -99,3 +100,4 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 - `<S-PageUp/Down>` — Buffer prev/next
 - `W` / `Y` — Select/yank current word
 - `<leader>cf` / `<leader>cF` — Copy full/relative path to clipboard
+- `<leader>je` / `<leader>js` — Export notebook to a script / serve notebooks in JupyterLab (again to reopen the page)
