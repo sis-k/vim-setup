@@ -32,7 +32,17 @@ map("i", "<S-Left>", "<esc>v<Left>", { desc = "Select text left" })
 map("i", "<S-Right>", "<esc>v<Right>", { desc = "Select text right" })
 
 map("n", "<leader>os", ":OverseerShell<cr>", { desc = "Overseer shell" })
-map("n", "<leader>or", ":OverseerRun<cr>", { desc = "Overseer run" })
+map("n", "<leader>or", "<cmd>OverseerShell<cr>", { desc = "Run Command" })
+-- :OverseerRun only offers project tasks, and does nothing visible if there are none.
+map("n", "<leader>oo", function()
+    local search = { dir = vim.fn.getcwd(), filetype = vim.bo.filetype }
+    require("overseer.template").list(search, function(templates)
+        local visible = vim.tbl_filter(function(template)
+            return not template.hide
+        end, templates)
+        vim.cmd(#visible > 0 and "OverseerRun" or "OverseerShell")
+    end)
+end, { desc = "Run Task or Command" })
 
 -- File operations
 vim.api.nvim_create_user_command("CopyFullPath", function()
