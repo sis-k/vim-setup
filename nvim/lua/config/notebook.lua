@@ -52,8 +52,8 @@ vim.api.nvim_create_user_command("NbScript", function(opts)
 end, { nargs = "?", complete = "file" })
 
 -- :NbServe starts JupyterLab from the project root and it opens the browser. Running it again reopens the page.
--- The server stops when Neovim exits.
-local server, url
+-- :NbStop stops the server, and it also stops when Neovim exits.
+local server, url, stopping
 vim.api.nvim_create_user_command("NbServe", function()
     if server then
         if url then
@@ -66,7 +66,9 @@ vim.api.nvim_create_user_command("NbServe", function()
     local root = vim.fs.root(0, { "pyproject.toml", ".git" }) or vim.uv.cwd()
     vim.notify("Starting JupyterLab in " .. root)
     local log = {}
-    server = vim.fn.jobstart({ "uv", "run", "--with", "jupyterlab", "jupyter", "lab" }, {
+    -- The redirect page is a local HTML file, which can open in a different browser from http links.
+    local cmd = { "uv", "run", "--with", "jupyterlab", "jupyter", "lab", "--ServerApp.use_redirect_file=False" }
+    server = vim.fn.jobstart(cmd, {
         cwd = root,
         stderr_buffered = false,
         on_stderr = function(_, lines)
@@ -76,18 +78,33 @@ vim.api.nvim_create_user_command("NbServe", function()
             end
         end,
         on_exit = function(_, code)
-            server, url = nil, nil
-            if code ~= 0 and vim.v.exiting == vim.NIL then
-                vim.schedule(function()
+            local stopped = stopping
+            server, url, stopping = nil, nil, nil
+            if vim.v.exiting ~= vim.NIL then
+                return
+            end
+            vim.schedule(function()
+                if stopped then
+                    vim.notify("JupyterLab stopped")
+                elseif code ~= 0 then
                     vim.notify(
                         "JupyterLab exited:\n" .. table.concat(log, "\n", math.max(1, #log - 10)),
                         vim.log.levels.ERROR
                     )
-                end)
-            end
+                end
+            end)
         end,
     })
 end, {})
 
+vim.api.nvim_create_user_command("NbStop", function()
+    if not server then
+        return vim.notify("JupyterLab isn't running")
+    end
+    stopping = true
+    vim.fn.jobstop(server)
+end, {})
+
 vim.keymap.set("n", "<leader>je", "<cmd>NbScript<cr>", { desc = "Export Notebook to Script" })
 vim.keymap.set("n", "<leader>js", "<cmd>NbServe<cr>", { desc = "Serve Notebooks (JupyterLab)" })
+vim.keymap.set("n", "<leader>jq", "<cmd>NbStop<cr>", { desc = "Stop Notebook Server" })
