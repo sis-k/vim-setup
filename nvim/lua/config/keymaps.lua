@@ -5,8 +5,8 @@ local map = vim.keymap.set
 
 map("n", "<leader><Left>", "<C-w>h", { desc = "Go to Left Window", remap = true })
 map("n", "<leader><Right>", "<C-w>l", { desc = "Go to Right Window", remap = true })
-map("n", "<leader><Down>", "<C-w>j", { desc = "Go to Upper Window", remap = true })
-map("n", "<leader><Up>", "<C-w>k", { desc = "Go to Lower Window", remap = true })
+map("n", "<leader><Down>", "<C-w>j", { desc = "Go to Lower Window", remap = true })
+map("n", "<leader><Up>", "<C-w>k", { desc = "Go to Upper Window", remap = true })
 
 -- Resize window using <ctrl> hjkl keys
 -- map("n", "<C-j>", "<cmd>resize +2<cr>", { desc = "Increase Window Height" })
@@ -39,10 +39,10 @@ vim.api.nvim_create_user_command("CopyFullPath", function()
     local path = vim.fn.expand("%:p")
     vim.fn.setreg("+", path)
 end, {})
-vim.keymap.set("n", "<leader>cf", ":CopyFullPath<cr>")
+map("n", "<leader>cy", "<cmd>CopyFullPath<cr>", { desc = "Copy Full Path" })
 
 vim.api.nvim_create_user_command("CopyRelativePath", function()
     local path = vim.fn.expand("%:.")
     vim.fn.setreg("+", path)
 end, {})
-vim.keymap.set("n", "<leader>cF", ":CopyRelativePath<cr>")
+map("n", "<leader>cY", "<cmd>CopyRelativePath<cr>", { desc = "Copy Relative Path" })

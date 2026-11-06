@@ -27,8 +27,8 @@ The nvim config follows the LazyVim structure:
   - `example.lua` — Template/reference file (skipped via early `return {}`)
   - `mason.lua` — Explicit Mason `ensure_installed` for extra formatters/linters
   - `python.lua` — Points `dap-python` at `bin/debugpy-adapter`; the debugged program runs on the project's interpreter (`$VIRTUAL_ENV`, `$CONDA_PREFIX`, or a venv folder such as `.venv`)
-  - `vstasks.lua` — VS Code tasks integration via `vs-tasks.nvim` with snacks picker
-  - `dashboard.lua` — Customizes snacks.nvim dashboard header
+  - `dashboard.lua` — Shows a quote of the day in the snacks.nvim dashboard header, fetched in the background and cached for the day
+  - `whichkey.lua` — Names the `<leader>j` notebook group in which-key
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled
@@ -99,5 +99,5 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 - `<leader><arrows>` — Window navigation
 - `<S-PageUp/Down>` — Buffer prev/next
 - `W` / `Y` — Select/yank current word
-- `<leader>cf` / `<leader>cF` — Copy full/relative path to clipboard
+- `<leader>cy` / `<leader>cY` — Copy full/relative path to clipboard
 - `<leader>je` / `<leader>js` / `<leader>jq` — Export notebook to a script / serve notebooks in JupyterLab (again to reopen the page) / stop the server
