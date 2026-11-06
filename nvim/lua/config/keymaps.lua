@@ -23,9 +23,6 @@ map("n", "<leader><Up>", "<C-w>k", { desc = "Go to Upper Window", remap = true }
 map("n", "<S-PageUp>", "<cmd>bprevious<cr>", { desc = "Prev Buffer" })
 map("n", "<S-PageDown>", "<cmd>bnext<cr>", { desc = "Next Buffer" })
 
-map("n", "W", "vaw", { desc = "Select the current word" })
-map("n", "Y", "yaw", { desc = "Yank the current word" })
-
 map("i", "<S-Up>", "<esc>v<Up>", { desc = "Select text up" })
 map("i", "<S-Down>", "<esc>v<Down>", { desc = "Select text down" })
 map("i", "<S-Left>", "<esc>v<Left>", { desc = "Select text left" })

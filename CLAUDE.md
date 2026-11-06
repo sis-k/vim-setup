@@ -98,7 +98,6 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 
 - `<leader><arrows>` — Window navigation
 - `<S-PageUp/Down>` — Buffer prev/next
-- `W` / `Y` — Select/yank current word
 - `<leader>cy` / `<leader>cY` — Copy full/relative path to clipboard
 - `<leader>oo` / `<leader>or` — Run a project task, or enter a command if the project has none / always enter a command (Overseer)
 - `<leader>je` / `<leader>js` / `<leader>jq` — Export notebook to a script / serve notebooks in JupyterLab (again to reopen the page) / stop the server
