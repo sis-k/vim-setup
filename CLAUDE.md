@@ -29,7 +29,7 @@ The nvim config follows the LazyVim structure:
   - `python.lua` — Points `dap-python` at `bin/debugpy-adapter`; the debugged program runs on the project's interpreter (`$VIRTUAL_ENV`, `$CONDA_PREFIX`, or a venv folder such as `.venv`)
   - `dashboard.lua` — Shows a quote of the day in the snacks.nvim dashboard header, fetched in the background and cached for the day
   - `whichkey.lua` — Names the `<leader>j` notebook group in which-key
-  - `cpp.lua` — `cmake-tools.nvim` keys, a configure preset picker that also selects its build preset, `clangd --query-driver` for cross-compilers on `PATH`, and a `gdbserver` debug config through gdb's own DAP mode
+  - `cpp.lua` — `cmake-tools.nvim` keys, pickers that only select (a configure preset also selects its build preset), `clangd --query-driver` for cross-compilers on `PATH`, and a `gdbserver` debug config through gdb's own DAP mode
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled
@@ -98,7 +98,7 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 ## C++ and Cross-Compiling
 
 - Keep `cpp.lua` general: nothing tuned to one project or toolchain. Projects configured by hand use a `CMakeUserPresets.json` or `<leader>mG` options rather than global kits.
-- cmake-tools doesn't pick a build preset when the configure preset changes, and won't replace a `compile_commands.json` link to another build folder. `cpp.lua` works around both.
+- cmake-tools configures as soon as a preset, kit or build type is picked, doesn't pick a build preset when the configure preset changes, and won't replace a `compile_commands.json` link to another build folder. `cpp.lua` works around all three: picking only selects and points at the matching build folder, and `<leader>mg`, `<leader>mG` or `<leader>mb` configures. Kit builds go to `out/<kit>/<build type>`, so switching kits never builds in a folder made with another compiler.
 - The `gdbserver` debug config runs `gdb --interpreter=dap` (gdb 14+ built with Python), so no debug adapter is downloaded. Arm's `arm-none-eabi-gdb` has no Python, so use `gdb-multiarch` for cross targets. gdb stops where the program is waiting when it connects, so the first continue runs to the first breakpoint.
 - Bare-metal debugging stays in Keil and Arm Development Studio.
 

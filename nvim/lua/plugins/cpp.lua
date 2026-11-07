@@ -14,6 +14,37 @@ local function query_driver()
     return "--query-driver=" .. table.concat(globs, ",")
 end
 
+-- cmake-tools configures as soon as something is selected, so <leader>mG would configure a second time.
+-- Selecting only selects here. It still points cmake-tools at the matching build folder, which it otherwise
+-- only does when configuring, so <leader>mb doesn't build the old one. A folder never configured gets
+-- configured by <leader>mb first.
+local function use_selected_build_dir()
+    local config = require("cmake-tools").get_config()
+    local Presets = require("cmake-tools.presets")
+    if config.base_settings.use_preset and Presets.exists(config.cwd) then
+        local preset = config.configure_preset
+            and Presets:parse(config.cwd):get_configure_preset(config.configure_preset, { include_hidden = true })
+        if preset and preset.binaryDirExpanded and preset.binaryDirExpanded ~= "" then
+            config:update_build_dir(preset.binaryDirExpanded)
+        end
+    else
+        local kits = require("cmake-tools.kits").parse(require("cmake-tools.const").cmake_kits_path, config.cwd)
+        config:update_build_dir(config:prepare_build_directory(kits), config:no_expand_build_directory_path())
+    end
+    -- Relink compile_commands.json, so clangd follows a switch back to a folder that's already configured.
+    require("cmake-tools").configure_compile_commands()
+end
+
+local function select_only(select)
+    return function()
+        require("cmake-tools")[select](function(result)
+            if result:is_ok() then
+                use_selected_build_dir()
+            end
+        end)
+    end
+end
+
 -- cmake-tools keeps the configure and build presets apart, so picking a configure preset would
 -- leave builds running the old build preset. Pick its build preset too, or ask when there's a choice.
 local function select_configure_preset()
@@ -30,9 +61,9 @@ local function select_configure_preset()
         if #matches == 1 then
             config.build_preset = matches[1]
             config:update_build_target()
-            cmake.generate({})
+            use_selected_build_dir()
         else
-            cmake.select_build_preset()
+            select_only("select_build_preset")()
         end
     end)
 end
@@ -87,6 +118,9 @@ return {
         "Civitasv/cmake-tools.nvim",
         opts = {
             cmake_executor = { name = "overseer" },
+            -- The kit is in the folder name, because selecting a kit no longer configures, and a build in
+            -- the old folder would quietly use the old compiler. Presets set their own folder.
+            cmake_build_directory = "out/${kit}/${variant:buildType}",
             cmake_compile_commands_options = { action = "soft_link", target = compile_commands_dir },
         },
         keys = {
@@ -96,9 +130,9 @@ return {
             { "<leader>mc", "<cmd>CMakeClean<cr>", desc = "Clean" },
             { "<leader>mx", "<cmd>CMakeStopExecutor<cr>", desc = "Stop" },
             { "<leader>mp", select_configure_preset, desc = "Select Configure Preset" },
-            { "<leader>mP", "<cmd>CMakeSelectBuildPreset<cr>", desc = "Select Build Preset" },
-            { "<leader>mk", "<cmd>CMakeSelectKit<cr>", desc = "Select Kit" },
-            { "<leader>mt", "<cmd>CMakeSelectBuildType<cr>", desc = "Select Build Type" },
+            { "<leader>mP", select_only("select_build_preset"), desc = "Select Build Preset" },
+            { "<leader>mk", select_only("select_kit"), desc = "Select Kit" },
+            { "<leader>mt", select_only("select_build_type"), desc = "Select Build Type" },
             { "<leader>mT", "<cmd>CMakeSelectBuildTarget<cr>", desc = "Select Build Target" },
         },
     },

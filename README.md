@@ -31,11 +31,13 @@ CMake projects use their `CMakePresets.json`. For a project you configure by han
 | Keys | Action |
 |---|---|
 | `<leader>mp` | Select a configure preset, and its build preset (asks if it has several) |
-| `<leader>mP` | Select a build preset |
-| `<leader>mk` | Select a kit, from the project's `cmake-kits.json` |
+| `<leader>mP` | Select a build preset, and its configure preset |
+| `<leader>mk` | Select a kit, from the project's `cmake-kits.json`. Each kit builds in its own `out/<kit>/<build type>` folder. |
 | `<leader>mt` / `<leader>mT` | Select a build type / build target |
 | `<leader>mg` / `<leader>mG` | Configure / configure with options, such as `-DFOO=1` |
-| `<leader>mb` | Build |
+| `<leader>mb` | Build, configuring first if the selected build folder hasn't been configured |
+
+Selecting a preset, kit or build type doesn't configure. Configure with `<leader>mg`, with your options with `<leader>mG`, or let `<leader>mb` do it. Options given with `<leader>mG` stay in CMake's cache until you clean or set them again.
 | `<leader>mc` / `<leader>mx` | Clean / stop |
 
 To debug on a target, run `gdbserver` there, press `<leader>dc` and choose `gdbserver: connect to target`. It asks for the local program with symbols, the address and the `gdb` to use, and remembers them for the session. It uses gdb's own DAP mode, which needs gdb 14 or newer built with Python. For other architectures, install `gdb-multiarch`, which it then suggests. gdb stops where the program is waiting when it connects, so press `<leader>dc` again to run to your first breakpoint.
