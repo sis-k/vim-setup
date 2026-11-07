@@ -47,6 +47,7 @@ end
 
 -- cmake-tools keeps the configure and build presets apart, so picking a configure preset would
 -- leave builds running the old build preset. Pick its build preset too, or ask when there's a choice.
+-- Without one, pick the plugin's "None" entry, which builds the configure preset's folder directly.
 local function select_configure_preset()
     local cmake = require("cmake-tools")
     cmake.select_configure_preset(function(result)
@@ -58,8 +59,8 @@ local function select_configure_preset()
         local matches = vim.tbl_filter(function(name)
             return presets:get_build_preset(name).configurePreset == config.configure_preset
         end, presets:get_build_preset_names({ include_disabled = false }))
-        if #matches == 1 then
-            config.build_preset = matches[1]
+        if #matches <= 1 then
+            config.build_preset = matches[1] or "None"
             config:update_build_target()
             use_selected_build_dir()
         else

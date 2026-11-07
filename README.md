@@ -30,10 +30,10 @@ CMake projects use their `CMakePresets.json`. For a project you configure by han
 
 | Keys | Action |
 |---|---|
-| `<leader>mp` | Select a configure preset, and its build preset (asks if it has several) |
-| `<leader>mP` | Select a build preset, and its configure preset |
+| `<leader>mp` | Select a configure preset, and its build preset (asks if it has several, uses `None` if it has none) |
+| `<leader>mP` | Select a build preset, and its configure preset. `None` builds the configure preset's folder directly. |
 | `<leader>mk` | Select a kit, from the project's `cmake-kits.json`. Each kit builds in its own `out/<kit>/<build type>` folder. |
-| `<leader>mt` / `<leader>mT` | Select a build type / build target |
+| `<leader>mt` / `<leader>mT` | Select a build type / build target. Targets are only known after configuring, so `<leader>mT` configures first if needed. A build preset that lists its own targets overrides `<leader>mT`; pick `None` with `<leader>mP` to choose freely. |
 | `<leader>mg` / `<leader>mG` | Configure / configure with options, such as `-DFOO=1` |
 | `<leader>mb` | Build, configuring first if the selected build folder hasn't been configured |
 
