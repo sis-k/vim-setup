@@ -26,15 +26,16 @@ Opening an `.ipynb` file shows it as read-only `# %%` Python, so `:w` can't chan
 
 ### C++ and CMake
 
-CMake projects use `CMakePresets.json` if they have one, otherwise a kit from `nvim/cmake-kits.json` or the project's own `cmake-kits.json`, which sets the compilers and an optional `toolchainFile`. Cross-compilers need to be on `PATH`, which is also how `clangd` learns to trust them. Start Neovim from a shell that has them.
+CMake projects use their `CMakePresets.json`. For a project you configure by hand, add a `CMakeUserPresets.json` with your toolchain file and options, or pass them with `<leader>mG`. Cross-compilers need to be on `PATH`, which is also how `clangd` learns to trust them. Start Neovim from a shell that has them.
 
 | Keys | Action |
 |---|---|
-| `<leader>mp` / `<leader>mP` | Select a configure / build preset |
-| `<leader>mk` | Select a kit |
+| `<leader>mp` | Select a configure preset, and its build preset (asks if it has several) |
+| `<leader>mP` | Select a build preset |
+| `<leader>mk` | Select a kit, from the project's `cmake-kits.json` |
 | `<leader>mt` / `<leader>mT` | Select a build type / build target |
 | `<leader>mg` / `<leader>mG` | Configure / configure with options, such as `-DFOO=1` |
 | `<leader>mb` | Build |
 | `<leader>mc` / `<leader>mx` | Clean / stop |
 
-To debug on a target, run `gdbserver` there, press `<leader>dc` and choose `gdbserver: connect to target`. It asks for the local program with symbols, the address and the `gdb` to use, such as `gdb-multiarch`, and remembers them for the session.
+To debug on a target, run `gdbserver` there, press `<leader>dc` and choose `gdbserver: connect to target`. It asks for the local program with symbols, the address and the `gdb` to use, and remembers them for the session. It uses gdb's own DAP mode, which needs gdb 14 or newer built with Python. For other architectures, install `gdb-multiarch`, which it then suggests. gdb stops where the program is waiting when it connects, so press `<leader>dc` again to run to your first breakpoint.

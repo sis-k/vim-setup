@@ -14,6 +14,41 @@ local function query_driver()
     return "--query-driver=" .. table.concat(globs, ",")
 end
 
+-- cmake-tools keeps the configure and build presets apart, so picking a configure preset would
+-- leave builds running the old build preset. Pick its build preset too, or ask when there's a choice.
+local function select_configure_preset()
+    local cmake = require("cmake-tools")
+    cmake.select_configure_preset(function(result)
+        if not result:is_ok() then
+            return
+        end
+        local config = cmake.get_config()
+        local presets = require("cmake-tools.presets"):parse(config.cwd)
+        local matches = vim.tbl_filter(function(name)
+            return presets:get_build_preset(name).configurePreset == config.configure_preset
+        end, presets:get_build_preset_names({ include_disabled = false }))
+        if #matches == 1 then
+            config.build_preset = matches[1]
+            config:update_build_target()
+            cmake.generate({})
+        else
+            cmake.select_build_preset()
+        end
+    end)
+end
+
+-- cmake-tools won't replace a compile_commands.json link that points at another build folder, so clangd would
+-- keep the first preset's flags. It asks for the link's folder before linking, which is the moment to remove it.
+local function compile_commands_dir()
+    local cwd = vim.uv.cwd()
+    local link = cwd .. "/compile_commands.json"
+    local stat = vim.uv.fs_lstat(link)
+    if stat and stat.type == "link" then
+        vim.uv.fs_unlink(link)
+    end
+    return cwd
+end
+
 -- Answers are kept for the session, so reconnecting only takes a few presses of enter.
 local last = { program = nil, target = "localhost:2345", gdb = nil }
 
@@ -34,16 +69,11 @@ local function connect_to_gdbserver(config)
     if not gdb then
         return vim.tbl_extend("force", config, { program = dap.ABORT })
     end
-    local gdb_path = vim.fn.exepath(gdb)
-    if gdb_path == "" then
+    if vim.fn.executable(gdb) == 0 then
         vim.notify(gdb .. " is not on PATH", vim.log.levels.ERROR)
         return vim.tbl_extend("force", config, { program = dap.ABORT })
     end
-    return vim.tbl_extend("force", config, {
-        program = vim.fn.fnamemodify(program, ":p"),
-        miDebuggerServerAddress = target,
-        miDebuggerPath = gdb_path,
-    })
+    return vim.tbl_extend("force", config, { program = vim.fn.fnamemodify(program, ":p"), target = target, gdb = gdb })
 end
 
 return {
@@ -56,11 +86,8 @@ return {
     {
         "Civitasv/cmake-tools.nvim",
         opts = {
-            -- Each kit and build type gets its own folder, because a CMake cache is tied to one toolchain.
-            -- Presets set their own folder.
-            cmake_build_directory = "build/${kit}/${variant:buildType}",
-            cmake_kits_path = vim.fn.stdpath("config") .. "/cmake-kits.json",
             cmake_executor = { name = "overseer" },
+            cmake_compile_commands_options = { action = "soft_link", target = compile_commands_dir },
         },
         keys = {
             { "<leader>mg", "<cmd>CMakeGenerate<cr>", desc = "Configure" },
@@ -68,7 +95,7 @@ return {
             { "<leader>mb", "<cmd>CMakeBuild<cr>", desc = "Build" },
             { "<leader>mc", "<cmd>CMakeClean<cr>", desc = "Clean" },
             { "<leader>mx", "<cmd>CMakeStopExecutor<cr>", desc = "Stop" },
-            { "<leader>mp", "<cmd>CMakeSelectConfigurePreset<cr>", desc = "Select Configure Preset" },
+            { "<leader>mp", select_configure_preset, desc = "Select Configure Preset" },
             { "<leader>mP", "<cmd>CMakeSelectBuildPreset<cr>", desc = "Select Build Preset" },
             { "<leader>mk", "<cmd>CMakeSelectKit<cr>", desc = "Select Kit" },
             { "<leader>mt", "<cmd>CMakeSelectBuildType<cr>", desc = "Select Build Type" },
@@ -84,31 +111,28 @@ return {
         },
     },
     {
-        "mason-org/mason.nvim",
-        opts = { ensure_installed = { "cpptools" } },
-    },
-    {
         "mfussenegger/nvim-dap",
         optional = true,
         opts = function()
             local dap = require("dap")
-            -- cpptools drives gdb through MI. gdb's own DAP mode needs Python, which toolchain builds can lack.
-            dap.adapters.cppdbg = dap.adapters.cppdbg
-                or { id = "cppdbg", type = "executable", command = "OpenDebugAD7" }
+            -- gdb 14+ speaks DAP itself, so no adapter needs downloading. It needs a gdb built with Python.
+            dap.adapters.gdb = dap.adapters.gdb
+                or function(callback, config)
+                    callback({
+                        type = "executable",
+                        command = config.gdb or "gdb",
+                        args = { "--interpreter=dap", "--eval-command", "set print pretty on" },
+                    })
+                end
             for _, lang in ipairs({ "c", "cpp" }) do
                 dap.configurations[lang] = dap.configurations[lang] or {}
                 table.insert(
                     dap.configurations[lang],
                     setmetatable({
                         name = "gdbserver: connect to target",
-                        type = "cppdbg",
-                        request = "launch",
-                        MIMode = "gdb",
+                        type = "gdb",
+                        request = "attach",
                         cwd = "${workspaceFolder}",
-                        stopAtEntry = false,
-                        setupCommands = {
-                            { text = "-enable-pretty-printing", ignoreFailures = true },
-                        },
                     }, { __call = connect_to_gdbserver })
                 )
             end

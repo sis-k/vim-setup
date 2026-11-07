@@ -29,7 +29,7 @@ The nvim config follows the LazyVim structure:
   - `python.lua` — Points `dap-python` at `bin/debugpy-adapter`; the debugged program runs on the project's interpreter (`$VIRTUAL_ENV`, `$CONDA_PREFIX`, or a venv folder such as `.venv`)
   - `dashboard.lua` — Shows a quote of the day in the snacks.nvim dashboard header, fetched in the background and cached for the day
   - `whichkey.lua` — Names the `<leader>j` notebook group in which-key
-  - `cpp.lua` — `cmake-tools.nvim` settings and keys, `clangd --query-driver` for cross-compilers on `PATH`, and a `gdbserver` debug config through `cpptools`
+  - `cpp.lua` — `cmake-tools.nvim` keys, a configure preset picker that also selects its build preset, `clangd --query-driver` for cross-compilers on `PATH`, and a `gdbserver` debug config through gdb's own DAP mode
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled
@@ -97,8 +97,9 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 
 ## C++ and Cross-Compiling
 
-- CMake uses `CMakePresets.json` when a project has one, otherwise a kit. Global kits are in `nvim/cmake-kits.json`; a project's own `cmake-kits.json` replaces them. The key is `toolchainFile`, despite the `toochainFile` typo in the plugin's docs.
-- The `gdbserver` debug config uses `cpptools` rather than gdb's DAP mode, because that needs Python and Arm's toolchain gdb has none.
+- Keep `cpp.lua` general: nothing tuned to one project or toolchain. Projects configured by hand use a `CMakeUserPresets.json` or `<leader>mG` options rather than global kits.
+- cmake-tools doesn't pick a build preset when the configure preset changes, and won't replace a `compile_commands.json` link to another build folder. `cpp.lua` works around both.
+- The `gdbserver` debug config runs `gdb --interpreter=dap` (gdb 14+ built with Python), so no debug adapter is downloaded. Arm's `arm-none-eabi-gdb` has no Python, so use `gdb-multiarch` for cross targets. gdb stops where the program is waiting when it connects, so the first continue runs to the first breakpoint.
 - Bare-metal debugging stays in Keil and Arm Development Studio.
 
 ## Key Custom Bindings (nvim)
@@ -106,6 +107,6 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 - `<leader><arrows>` — Window navigation
 - `<S-PageUp/Down>` — Buffer prev/next
 - `<leader>cy` / `<leader>cY` — Copy full/relative path to clipboard
-- `<leader>m` — CMake: configure (`g`, `G` with options), build (`b`), clean (`c`), stop (`x`), and select a configure preset (`p`), build preset (`P`), kit (`k`), build type (`t`) or target (`T`)
+- `<leader>m` — CMake: configure (`g`, `G` with options), build (`b`), clean (`c`), stop (`x`), and select a configure preset and its build preset (`p`), a build preset (`P`), kit (`k`), build type (`t`) or target (`T`)
 - `<leader>oo` / `<leader>or` — Run a project task, or enter a command if the project has none / always enter a command (Overseer)
 - `<leader>je` / `<leader>js` / `<leader>jq` — Export notebook to a script / serve notebooks in JupyterLab (again to reopen the page) / stop the server
