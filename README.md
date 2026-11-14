@@ -36,8 +36,8 @@ CMake projects use their `CMakePresets.json`. For a project you configure by han
 | `<leader>mt` / `<leader>mT` | Select a build type / build target. Targets are only known after configuring, so `<leader>mT` configures first if needed. A build preset that lists its own targets overrides `<leader>mT`; pick `None` with `<leader>mP` to choose freely. |
 | `<leader>mg` / `<leader>mG` | Configure / configure with options, such as `-DFOO=1` |
 | `<leader>mb` | Build, configuring first if the selected build folder hasn't been configured |
+| `<leader>mc` / `<leader>mx` | Clean / stop |
 
 Selecting a preset, kit or build type doesn't configure. Configure with `<leader>mg`, with your options with `<leader>mG`, or let `<leader>mb` do it. Options given with `<leader>mG` stay in CMake's cache until you clean or set them again.
-| `<leader>mc` / `<leader>mx` | Clean / stop |
 
 To debug on a target, run `gdbserver` there, press `<leader>dc` and choose `gdbserver: connect to target`. It asks for the local program with symbols, the address and the `gdb` to use, and remembers them for the session. It uses gdb's own DAP mode, which needs gdb 14 or newer built with Python. For other architectures, install `gdb-multiarch`, which it then suggests. gdb stops where the program is waiting when it connects, so press `<leader>dc` again to run to your first breakpoint.
