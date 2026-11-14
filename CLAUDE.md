@@ -29,7 +29,7 @@ The nvim config follows the LazyVim structure:
   - `python.lua` — Points `dap-python` at `bin/debugpy-adapter`; the debugged program runs on the project's interpreter (`$VIRTUAL_ENV`, `$CONDA_PREFIX`, or a venv folder such as `.venv`)
   - `dashboard.lua` — Shows a quote of the day in the snacks.nvim dashboard header, fetched in the background and cached for the day
   - `whichkey.lua` — Names the `<leader>j` notebook group in which-key
-  - `cpp.lua` — `cmake-tools.nvim` keys, pickers that only select (a configure preset also selects its build preset), `clangd --query-driver` for cross-compilers on `PATH`, and a `gdbserver` debug config through gdb's own DAP mode
+  - `cpp.lua` — `cmake-tools.nvim` keys, pickers that only select (a configure preset also selects its build preset), `clangd --query-driver` for cross-compilers on `PATH`, neocmake without parsing the files of `find_package()` packages (faster with big SDKs; package names still complete), and a `gdbserver` debug config through gdb's own DAP mode
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled

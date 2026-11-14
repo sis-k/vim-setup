@@ -113,6 +113,11 @@ return {
         "neovim/nvim-lspconfig",
         opts = function(_, opts)
             table.insert(opts.servers.clangd.cmd, query_driver())
+            -- neocmake parses every file of each find_package() to complete what the package defines, which is
+            -- slow with big SDKs and toolchains. Package names still complete.
+            opts.servers.neocmake = vim.tbl_deep_extend("force", opts.servers.neocmake or {}, {
+                init_options = { scan_cmake_in_package = false },
+            })
         end,
     },
     {
