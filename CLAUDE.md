@@ -29,12 +29,13 @@ The nvim config follows the LazyVim structure:
   - `python.lua` — Points `dap-python` at `bin/debugpy-adapter`; the debugged program runs on the project's interpreter (`$VIRTUAL_ENV`, `$CONDA_PREFIX`, or a venv folder such as `.venv`)
   - `dashboard.lua` — Shows a quote of the day in the snacks.nvim dashboard header, fetched in the background and cached for the day
   - `whichkey.lua` — Names the `<leader>j` notebook group in which-key
+  - `cpp.lua` — `cmake-tools.nvim` keys, pickers that only select (a configure preset also selects its build preset), `clangd --query-driver` for cross-compilers on `PATH`, neocmake without parsing the files of `find_package()` packages (faster with big SDKs; package names still complete), and a `gdbserver` debug config through gdb's own DAP mode
   - `diffview.lua` — [diffview+](https://github.com/dlyongemallo/diffview-plus.nvim), the maintained fork of diffview.nvim: changed-file panel with side-by-side diffs, file history and a 3-way merge tool (`g?` inside a view lists its keys)
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled
 
-Configured in `lazyvim.json`: luasnip, dap.core, dap.nlua, overseer, clangd, git, markdown, python, treesitter-context, gitui, project.
+Configured in `lazyvim.json`: luasnip, dap.core, dap.nlua, overseer, clangd, cmake, git, markdown, python, treesitter-context, gitui, project.
 
 ## Formatting
 
@@ -95,6 +96,13 @@ python3 bootstrap_tmux.py --tmux-conf /tmp/test.conf    # use alternate conf pat
 
 LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyright` from `lang.python`, `clangd` from `lang.clangd`). The Python debug adapter is the exception: it runs through `uvx`, not Mason. Additional tools (formatters, linters) are pinned explicitly in `lua/plugins/mason.lua` via `ensure_installed`. Add entries there when a new formatter or linter is needed.
 
+## C++ and Cross-Compiling
+
+- Keep `cpp.lua` general: nothing tuned to one project or toolchain. Projects configured by hand use a `CMakeUserPresets.json` or `<leader>mG` options rather than global kits.
+- cmake-tools configures as soon as a preset, kit or build type is picked, doesn't pick a build preset when the configure preset changes, and won't replace a `compile_commands.json` link to another build folder. `cpp.lua` works around all three: picking only selects and points at the matching build folder, and `<leader>mg`, `<leader>mG` or `<leader>mb` configures. Kit builds go to `out/<kit>/<build type>`, so switching kits never builds in a folder made with another compiler.
+- The `gdbserver` debug config runs `gdb --interpreter=dap` (gdb 14+ built with Python), so no debug adapter is downloaded. Arm's `arm-none-eabi-gdb` has no Python, so use `gdb-multiarch` for cross targets. gdb stops where the program is waiting when it connects, so the first continue runs to the first breakpoint.
+- Bare-metal debugging stays in Keil and Arm Development Studio.
+
 ## Key Custom Bindings (nvim)
 
 - `<leader><arrows>` — Window navigation
@@ -102,5 +110,6 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 - `<leader>cy` / `<leader>cY` — Copy full/relative path to clipboard
 - `<leader>gv` / `<leader>gV` / `<leader>gq` — Diffview: working-tree changes / current file history (line history in visual mode) / close
 - `<leader>ut` — Toggle the treesitter context header
+- `<leader>m` — CMake: configure (`g`, `G` with options), build (`b`), clean (`c`), stop (`x`), and select a configure preset and its build preset (`p`), a build preset (`P`), kit (`k`), build type (`t`) or target (`T`)
 - `<leader>oo` / `<leader>or` — Run a project task, or enter a command if the project has none / always enter a command (Overseer)
 - `<leader>je` / `<leader>js` / `<leader>jq` — Export notebook to a script / serve notebooks in JupyterLab (again to reopen the page) / stop the server
