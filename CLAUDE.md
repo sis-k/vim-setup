@@ -29,11 +29,12 @@ The nvim config follows the LazyVim structure:
   - `python.lua` — Points `dap-python` at `bin/debugpy-adapter`; the debugged program runs on the project's interpreter (`$VIRTUAL_ENV`, `$CONDA_PREFIX`, or a venv folder such as `.venv`)
   - `dashboard.lua` — Shows a quote of the day in the snacks.nvim dashboard header, fetched in the background and cached for the day
   - `whichkey.lua` — Names the `<leader>j` notebook group in which-key
+  - `diffview.lua` — [diffview+](https://github.com/dlyongemallo/diffview-plus.nvim), the maintained fork of diffview.nvim: changed-file panel with side-by-side diffs, file history and a 3-way merge tool (`g?` inside a view lists its keys)
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled
 
-Configured in `lazyvim.json`: luasnip, dap.core, dap.nlua, overseer, clangd, git, markdown, python, gitui, project.
+Configured in `lazyvim.json`: luasnip, dap.core, dap.nlua, overseer, clangd, git, markdown, python, treesitter-context, gitui, project.
 
 ## Formatting
 
@@ -99,5 +100,7 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 - `<leader><arrows>` — Window navigation
 - `<S-PageUp/Down>` — Buffer prev/next
 - `<leader>cy` / `<leader>cY` — Copy full/relative path to clipboard
+- `<leader>gv` / `<leader>gV` / `<leader>gq` — Diffview: working-tree changes / current file history (line history in visual mode) / close
+- `<leader>ut` — Toggle the treesitter context header
 - `<leader>oo` / `<leader>or` — Run a project task, or enter a command if the project has none / always enter a command (Overseer)
 - `<leader>je` / `<leader>js` / `<leader>jq` — Export notebook to a script / serve notebooks in JupyterLab (again to reopen the page) / stop the server
