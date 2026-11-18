@@ -111,6 +111,7 @@ LazyVim extras auto-manage their own LSPs and DAP adapters via Mason (e.g., `pyr
 - `<leader>cy` / `<leader>cY` — Copy full/relative path to clipboard
 - `<leader>gv` / `<leader>gV` / `<leader>gq` — Diffview: working-tree changes / current file history (line history in visual mode) / close
 - `<leader>ut` — Toggle the treesitter context header
+- `<leader>cp` — Markdown: toggle the live browser preview (markdown-preview.nvim, LazyVim default; also renders mermaid)
 - `<leader>m` — CMake: configure (`g`, `G` with options), build (`b`), clean (`c`), stop (`x`), and select a configure preset and its build preset (`p`), a build preset (`P`), kit (`k`), build type (`t`) or target (`T`)
 - `<leader>oo` / `<leader>or` — Run a project task, or enter a command if the project has none / always enter a command (Overseer)
 - `<leader>je` / `<leader>js` / `<leader>jq` — Export notebook to a script / serve notebooks in JupyterLab (again to reopen the page) / stop the server
