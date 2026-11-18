@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a personal editor configuration repository containing:
 - `nvim/` — Neovim config based on [LazyVim](https://lazyvim.github.io/) starter template
 - `vim/.vimrc` — Legacy Vim config (YouCompleteMe, fzf, NERDTree)
-- `tmux/.tmux.conf` — tmux config (vi keys, mouse, tpm)
+- `tmux/.tmux.conf` — tmux config (vi keys, mouse, image passthrough, tpm)
 - `bootstrap_nvim.py` — Automated Neovim setup script
 - `bootstrap_vim.py` — Automated Vim setup script
 - `bootstrap_tmux.py` — Automated tmux setup script
@@ -31,6 +31,8 @@ The nvim config follows the LazyVim structure:
   - `whichkey.lua` — Names the `<leader>j` notebook group in which-key
   - `cpp.lua` — `cmake-tools.nvim` keys, pickers that only select (a configure preset also selects its build preset), `clangd --query-driver` for cross-compilers on `PATH`, neocmake without parsing the files of `find_package()` packages (faster with big SDKs; package names still complete), and a `gdbserver` debug config through gdb's own DAP mode
   - `diffview.lua` — [diffview+](https://github.com/dlyongemallo/diffview-plus.nvim), the maintained fork of diffview.nvim: changed-file panel with side-by-side diffs, file history and a 3-way merge tool (`g?` inside a view lists its keys)
+  - `images.lua` — Enables the snacks.nvim image module (kitty graphics protocol): image files and inline markdown images render in the buffer (needs ImageMagick; under tmux needs `allow-passthrough on`), and sets `conceallevel=2` for markdown
+  - `images.lua` — Enables the snacks.nvim image module (kitty graphics protocol): image files and inline markdown images render in the buffer (needs ImageMagick; under tmux needs `allow-passthrough on`), and sets `conceallevel=2` for markdown
   - `colorscheme.lua` — Sets the colorscheme via LazyVim opts (Neovim built-in `default`)
 
 ## LazyVim Extras Enabled
