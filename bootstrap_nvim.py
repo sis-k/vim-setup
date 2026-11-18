@@ -369,6 +369,8 @@ def main() -> None:
     bootstrap_plugins(nvim_bin)
     print("\nNote: LazyVim requires a Nerd Font for icons and the statusline to render correctly.")
     print("  Install one from https://www.nerdfonts.com and set it in your terminal emulator.")
+    print("\nNote: inline images need kitty, ghostty or wezterm (plus ImageMagick). Elsewhere they are skipped silently.")
+    print("  Run ':checkhealth snacks' in nvim to see whether the terminal is detected.")
     print("\nDone! Launch nvim to get started.")
 
 
