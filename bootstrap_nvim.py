@@ -31,6 +31,8 @@ if sys.version_info < (3, 10):
 NVIM_RELEASES_URL = "https://github.com/neovim/neovim/releases/latest/download"
 LOCAL_BIN = Path.home() / ".local" / "bin"
 UV_INSTALL_SCRIPT = "curl -LsSf https://astral.sh/uv/install.sh | sh"
+# Pulls in Puppeteer and a headless Chromium (~150MB); may need sudo or extra libraries on Linux.
+MMDC_INSTALL_SCRIPT = "npm install -g @mermaid-js/mermaid-cli"
 
 REPO_DIR = Path(__file__).resolve().parent
 NVIM_CONFIG_SRC = REPO_DIR / "nvim"
@@ -93,6 +95,7 @@ DEPS = [d for d in [
     Dep("cmake",    "CMake projects",                  required=False, apt="cmake",      dnf="cmake",      pacman="cmake",      brew="cmake"),
     Dep("gdb",      "gdbserver debugging (gdb 14+)",   required=False, apt="gdb",        dnf="gdb",        pacman="gdb",        brew="gdb"),
     Dep("magick",   "inline images (snacks image)",    required=False, apt="imagemagick", dnf="ImageMagick", pacman="imagemagick", brew="imagemagick", aliases=("convert",)),
+    Dep("mmdc",     "inline mermaid diagrams (mermaid-cli)", required=False, apt="", dnf="", pacman="", brew="mermaid-cli", install_script=MMDC_INSTALL_SCRIPT),
 ] if d is not None]
 # fmt: on
 
