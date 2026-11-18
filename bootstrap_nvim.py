@@ -93,6 +93,7 @@ DEPS = [d for d in [
     Dep("gitui",    "gitui binary (gitui extra)",      required=False, apt="",           dnf="",           pacman="gitui",      brew="gitui"),
     Dep("cmake",    "CMake projects",                  required=False, apt="cmake",      dnf="cmake",      pacman="cmake",      brew="cmake"),
     Dep("gdb",      "gdbserver debugging (gdb 14+)",   required=False, apt="gdb",        dnf="gdb",        pacman="gdb",        brew="gdb"),
+    Dep("magick",   "inline images (snacks image)",    required=False, apt="imagemagick", dnf="ImageMagick", pacman="imagemagick", brew="imagemagick", aliases=("convert",)),
 ] if d is not None]
 # fmt: on
 
