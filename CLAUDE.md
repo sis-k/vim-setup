@@ -54,7 +54,7 @@ Both scripts require Python 3.10+ and `git`. Run from the repo root.
 
 **Neovim** — `bootstrap_nvim.py`:
 1. Checks and optionally installs system dependencies (`--install-deps`)
-2. Downloads and installs the latest Neovim binary to `~/.local/bin`
+2. Downloads the latest Neovim release to `~/.local/opt/nvim` (binary plus its runtime files) and links `~/.local/bin/nvim` to it; skipped if `nvim` is already on `PATH`
 3. Symlinks `nvim/` → `~/.config/nvim` (backs up any existing config)
 4. Pre-installs all plugins headlessly via `Lazy! restore` (pinned to `lazy-lock.json`)
 

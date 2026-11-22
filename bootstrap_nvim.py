@@ -3,7 +3,7 @@
 
 Steps performed:
   1. Check system dependencies; optionally auto-install with --install-deps.
-  2. Download and install the latest Neovim binary to ~/.local/bin.
+  2. Download the latest Neovim release to ~/.local/opt/nvim, linked from ~/.local/bin/nvim.
   3. Symlink <repo>/nvim/ to ~/.config/nvim (backs up any existing config).
   4. Pre-install all plugins headlessly via lazy.nvim, pinned to lazy-lock.json.
 
@@ -30,6 +30,7 @@ if sys.version_info < (3, 10):
 
 NVIM_RELEASES_URL = "https://github.com/neovim/neovim/releases/latest/download"
 LOCAL_BIN = Path.home() / ".local" / "bin"
+NVIM_INSTALL_DIR = Path.home() / ".local" / "opt" / "nvim"
 UV_INSTALL_SCRIPT = "curl -LsSf https://astral.sh/uv/install.sh | sh"
 
 REPO_DIR = Path(__file__).resolve().parent
@@ -170,7 +171,11 @@ def ensure_in_path(directory: Path) -> None:
 
 
 def install_nvim() -> Path:
-    """Install the latest Neovim binary to LOCAL_BIN and return its path.
+    """Install the latest Neovim release and return the path of its binary.
+
+    The whole release (binary plus its share/ and lib/ runtime files) is unpacked
+    to NVIM_INSTALL_DIR, and LOCAL_BIN/nvim is a symlink to its bin/nvim, because
+    Neovim finds its runtime relative to the real binary.
 
     If nvim is already on PATH, skips the download and returns the existing path.
     """
@@ -181,6 +186,7 @@ def install_nvim() -> Path:
 
     print("Installing Neovim...")
     LOCAL_BIN.mkdir(parents=True, exist_ok=True)
+    NVIM_INSTALL_DIR.parent.mkdir(parents=True, exist_ok=True)
 
     tarball = nvim_tarball_name()
     url = f"{NVIM_RELEASES_URL}/{tarball}"
@@ -201,15 +207,22 @@ def install_nvim() -> Path:
             if not extracted:
                 sys.exit("Error: could not find nvim binary in downloaded archive.")
 
-            dest = LOCAL_BIN / "nvim"
-            shutil.copy2(extracted, dest)
-            dest.chmod(0o755)
-            print(f"  Installed to {dest}")
+            if NVIM_INSTALL_DIR.exists():
+                shutil.rmtree(NVIM_INSTALL_DIR)
+            shutil.move(str(extracted.parent.parent), NVIM_INSTALL_DIR)
     except urllib.error.URLError as e:
         sys.exit(f"Error: failed to download Neovim: {e}")
 
+    real_bin = NVIM_INSTALL_DIR / "bin" / "nvim"
+    real_bin.chmod(0o755)
+    dest = LOCAL_BIN / "nvim"
+    if dest.is_symlink() or dest.exists():
+        dest.unlink()
+    dest.symlink_to(real_bin)
+    print(f"  Installed to {NVIM_INSTALL_DIR}, linked from {dest}")
+
     ensure_in_path(LOCAL_BIN)
-    return LOCAL_BIN / "nvim"
+    return dest
 
 
 def symlink_config(config_dir: Path) -> None:
