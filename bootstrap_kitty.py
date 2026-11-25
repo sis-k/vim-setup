@@ -26,7 +26,9 @@ KITTY_CONF_SRC = Path(__file__).resolve().parent / "kitty" / "kitty.conf"
 
 
 def default_config_path() -> Path:
-    """Respect an absolute XDG_CONFIG_HOME, otherwise use ~/.config."""
+    """Follow Kitty's lookup: $KITTY_CONFIG_DIRECTORY, then an absolute $XDG_CONFIG_HOME, then ~/.config."""
+    if kitty_dir := os.environ.get("KITTY_CONFIG_DIRECTORY"):
+        return Path(kitty_dir).expanduser() / "kitty.conf"
     config_home = os.environ.get("XDG_CONFIG_HOME", "")
     root = Path(config_home) if config_home and Path(config_home).is_absolute() else Path.home() / ".config"
     return root / "kitty" / "kitty.conf"
@@ -58,8 +60,10 @@ def install_kitty(install: bool) -> None:
         "apt": ["apt", "install", "-y", "kitty"],
         "dnf": ["dnf", "install", "-y", "kitty"],
         "pacman": ["pacman", "-S", "--needed", "--noconfirm", "kitty"],
-        "brew": ["brew", "install"] + (["--cask"] if sys.platform == "darwin" else []) + ["kitty"],
     }
+    # Homebrew ships Kitty only as a macOS cask; there is no Linux formula.
+    if sys.platform == "darwin":
+        commands = {"brew": ["brew", "install", "--cask", "kitty"]}
     for manager, command in commands.items():
         if shutil.which(manager):
             if manager != "brew" and os.geteuid() != 0:

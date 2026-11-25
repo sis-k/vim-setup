@@ -96,9 +96,9 @@ python3 bootstrap_tmux.py --tmux-conf /tmp/test.conf    # use alternate conf pat
 ```
 
 **Kitty (optional)** — `bootstrap_kitty.py`:
-1. Requires Kitty on PATH, or installs it with `--install-deps` (apt/dnf/pacman/brew)
+1. Requires Kitty on PATH, or installs it with `--install-deps` (apt/dnf/pacman; brew on macOS, where Kitty is a cask)
 2. Checks the configured font using `fc-list` when available; fonts are not auto-installed
-3. Symlinks `kitty/kitty.conf` to `$XDG_CONFIG_HOME/kitty/kitty.conf` (defaults to `~/.config/kitty/kitty.conf`)
+3. Symlinks `kitty/kitty.conf` into Kitty's config dir: `$KITTY_CONFIG_DIRECTORY`, else `$XDG_CONFIG_HOME/kitty`, else `~/.config/kitty`
 4. Preserves existing files and unrelated symlinks as `.bak`, `.bak.1`, etc.; an existing correct symlink is unchanged
 
 ```bash
