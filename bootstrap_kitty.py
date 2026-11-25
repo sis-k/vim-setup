@@ -51,9 +51,32 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def install_kitty(install: bool) -> None:
+# Where the macOS app (dmg, cask or Kitty's installer) and Kitty's Linux installer put it.
+# These copies are often not on PATH.
+KITTY_APP_BINARIES = [
+    Path("/Applications/kitty.app/Contents/MacOS/kitty"),
+    Path.home() / "Applications" / "kitty.app" / "Contents" / "MacOS" / "kitty",
+    Path.home() / ".local" / "kitty.app" / "bin" / "kitty",
+]
+
+
+def find_kitty() -> tuple[str, bool] | None:
+    """Return Kitty's path and whether it is on PATH, or None if not installed."""
     if existing := shutil.which("kitty"):
-        print(f"Kitty already installed at {existing}")
+        return existing, True
+    for binary in KITTY_APP_BINARIES:
+        if binary.is_file() and os.access(binary, os.X_OK):
+            return str(binary), False
+    return None
+
+
+def install_kitty(install: bool) -> None:
+    if found := find_kitty():
+        path, on_path = found
+        print(f"Kitty already installed at {path}")
+        if not on_path:
+            print("  Note: the kitty command is not on PATH (not needed to use the app). To add it:")
+            print(f"  ln -s {path} ~/.local/bin/kitty")
         return
     if not install:
         sys.exit("Error: Kitty not found. Install it manually or re-run with --install-deps.")
