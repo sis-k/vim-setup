@@ -4,7 +4,7 @@
 Checks Kitty is installed, optionally installs it with --install-deps, and
 symlinks kitty/kitty.conf into the user's configuration directory. Existing
 files and unrelated symlinks are backed up without replacing earlier backups.
-The configured font is checked separately; fonts are not installed automatically.
+Checks the configured Nerd Font is installed; --install-deps also downloads it.
 
 Usage:
   python3 bootstrap_kitty.py
@@ -18,6 +18,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import nerd_font
 
 if sys.version_info < (3, 10):
     sys.exit("Error: Python 3.10 or later is required.")
@@ -44,7 +46,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--install-deps", action="store_true",
-        help="Attempt to install Kitty if it is missing (does not install fonts).",
+        help="Install Kitty and the configured Nerd Font if they are missing.",
     )
     return parser.parse_args()
 
@@ -74,29 +76,20 @@ def install_kitty(install: bool) -> None:
     sys.exit("Error: no supported package manager found (apt/dnf/pacman/brew). Install Kitty manually.")
 
 
-def check_font() -> None:
-    """Check installed families, not fc-match, which silently chooses fallbacks."""
+def configured_font() -> str:
+    """The font_family set in the repo's kitty.conf, or Kitty's default."""
     family = "monospace"
     for line in KITTY_CONF_SRC.read_text().splitlines():
         parts = line.split(None, 1)
         if len(parts) == 2 and parts[0] == "font_family":
             family = parts[1].strip()
-    if family == "monospace":
-        return
-    if shutil.which("fc-list"):
-        result = subprocess.run(["fc-list", "--format=%{family}\n"], capture_output=True, text=True)
-        families = {name.strip().casefold() for line in result.stdout.splitlines() for name in line.split(",")}
-        if result.returncode == 0 and family.casefold() in families:
-            print(f"Font installed: {family}")
-            return
-        if result.returncode == 0:
-            print(f"Warning: font '{family}' is not installed; Kitty may use a fallback.")
-        else:
-            print(f"Warning: could not check whether '{family}' is installed (fc-list failed).")
-    else:
-        print(f"Warning: could not check whether '{family}' is installed (fc-list unavailable).")
-    print("  Install UbuntuMono from https://www.nerdfonts.com/font-downloads for the bundled config,")
-    print("  or change font_family in kitty/kitty.conf to an installed font.")
+    return family
+
+
+def check_font(install: bool) -> None:
+    family = configured_font()
+    if family != "monospace":
+        nerd_font.ensure(family, install)
 
 
 def validate_destination(destination: Path) -> None:
@@ -135,7 +128,7 @@ def main() -> None:
     destination = args.kitty_conf.expanduser().absolute()
     validate_destination(destination)
     install_kitty(args.install_deps)
-    check_font()
+    check_font(args.install_deps)
     symlink_conf(destination)
     print("Done! Restart Kitty or press Ctrl+Shift+F5 to reload the config.")
 

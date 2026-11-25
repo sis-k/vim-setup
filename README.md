@@ -8,6 +8,8 @@ python3 bootstrap_nvim.py                # report missing dependencies and set u
 python3 bootstrap_nvim.py --install-deps # also install missing dependencies
 ```
 
+LazyVim needs a [Nerd Font](https://www.nerdfonts.com) for its icons and statusline. `--install-deps` downloads UbuntuSansMono Nerd Font into your user font folder (`~/.local/share/fonts`, or `~/Library/Fonts` on macOS); set it as your terminal's font. Over SSH the font belongs on the machine running the terminal, so the script skips it there.
+
 [uv](https://docs.astral.sh/uv/) is required for the Python debugger and the notebook commands. `--install-deps` installs it with the package manager, or with uv's official installer on apt systems, which have no uv package. Without that flag, a missing `uv` is only reported, so install it yourself:
 
 ```bash
@@ -56,11 +58,11 @@ Requires Python 3.10+. The script symlinks `kitty/kitty.conf` to
 `.bak.1`, etc., preserving previous backups. Re-running with the correct symlink
 does nothing. Keep this repository in place while using the symlink.
 
-`--install-deps` supports apt, dnf, pacman, and Homebrew (macOS only). It installs Kitty only;
-the script reports missing fonts separately. The config uses **UbuntuMono Nerd
-Font at 12 pt** and **F11 to toggle fullscreen**. Install UbuntuMono from
-[Nerd Fonts](https://www.nerdfonts.com/font-downloads), or change `font_family` in
-`kitty/kitty.conf` to an installed font. Font detection uses `fc-list` when
-available. Restart Kitty or press **Ctrl+Shift+F5** to apply config changes.
+`--install-deps` supports apt, dnf, pacman, and Homebrew (macOS only), and also
+downloads the configured Nerd Font if it is missing. The config uses
+**UbuntuSansMono Nerd Font at 12 pt** and **F11 to toggle fullscreen**. To use
+another font, change `font_family` in `kitty/kitty.conf`. Font detection uses
+`fc-list` when available. Restart Kitty or press **Ctrl+Shift+F5** to apply
+config changes.
 
-This bootstrap is independent of the Neovim, Vim, and tmux scripts.
+This bootstrap doesn't depend on the Neovim, Vim, or tmux scripts.

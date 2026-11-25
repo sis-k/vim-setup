@@ -6,6 +6,7 @@ Steps performed:
   2. Download the latest Neovim release to ~/.local/opt/nvim, linked from ~/.local/bin/nvim.
   3. Symlink <repo>/nvim/ to ~/.config/nvim (backs up any existing config).
   4. Pre-install all plugins headlessly via lazy.nvim, pinned to lazy-lock.json.
+  5. Check for a Nerd Font; --install-deps downloads one (skipped over SSH).
 
 Usage:
   python3 bootstrap_nvim.py
@@ -24,6 +25,8 @@ import tempfile
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+
+import nerd_font
 
 if sys.version_info < (3, 10):
     sys.exit("Error: Python 3.10 or later is required.")
@@ -331,6 +334,17 @@ def handle_deps(install: bool) -> None:
     print("\n  Re-run with --install-deps to install automatically.")
 
 
+def check_nerd_font(install: bool) -> None:
+    """LazyVim needs a Nerd Font for icons; it must be on the machine running the terminal."""
+    print("\nLazyVim needs a Nerd Font for icons and the statusline.")
+    if os.environ.get("SSH_CONNECTION"):
+        print("  Over SSH the font is used by your local terminal, so install it there:")
+        print("  python3 bootstrap_kitty.py --install-deps, or https://www.nerdfonts.com/font-downloads")
+        return
+    nerd_font.ensure(nerd_font.DEFAULT_FAMILY, install)
+    print("  Set it as your terminal's font (bootstrap_kitty.py does this for Kitty).")
+
+
 def bootstrap_plugins(nvim_bin: Path) -> None:
     """Run a headless Neovim session to pre-install all lazy.nvim plugins.
 
@@ -370,8 +384,7 @@ def main() -> None:
     nvim_bin = install_nvim()
     symlink_config(config_dir)
     bootstrap_plugins(nvim_bin)
-    print("\nNote: LazyVim requires a Nerd Font for icons and the statusline to render correctly.")
-    print("  Install one from https://www.nerdfonts.com and set it in your terminal emulator.")
+    check_nerd_font(install=args.install_deps)
     print("\nNote: inline images need kitty, ghostty or wezterm (plus ImageMagick). Elsewhere they are skipped silently.")
     print("  Run ':checkhealth snacks' in nvim to see whether the terminal is detected.")
     print("\nDone! Launch nvim to get started.")

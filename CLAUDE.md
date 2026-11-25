@@ -8,11 +8,12 @@ This is a personal editor configuration repository containing:
 - `nvim/` — Neovim config based on [LazyVim](https://lazyvim.github.io/) starter template
 - `vim/.vimrc` — Legacy Vim config (YouCompleteMe, fzf, NERDTree)
 - `tmux/.tmux.conf` — tmux config (vi keys, mouse, image passthrough, tpm)
-- `kitty/kitty.conf` — Optional Kitty config (UbuntuMono Nerd Font 12 pt, F11 fullscreen)
+- `kitty/kitty.conf` — Optional Kitty config (UbuntuSansMono Nerd Font 12 pt, F11 fullscreen)
 - `bootstrap_nvim.py` — Automated Neovim setup script
 - `bootstrap_vim.py` — Automated Vim setup script
 - `bootstrap_tmux.py` — Automated tmux setup script
 - `bootstrap_kitty.py` — Optional Kitty install and config symlink script
+- `nerd_font.py` — Shared helper used by the nvim and kitty bootstraps to check for and download a Nerd Font from the latest Nerd Fonts release
 
 ## Neovim Architecture
 
@@ -60,6 +61,7 @@ The scripts require Python 3.10+; Neovim, Vim, and tmux setup also use `git`. Ru
 2. Downloads the latest Neovim release to `~/.local/opt/nvim` (binary plus its runtime files) and links `~/.local/bin/nvim` to it; skipped if `nvim` is already on `PATH`
 3. Symlinks `nvim/` → `~/.config/nvim` (backs up any existing config)
 4. Pre-installs all plugins headlessly via `Lazy! restore` (pinned to `lazy-lock.json`)
+5. Checks for UbuntuSansMono Nerd Font (LazyVim icons); `--install-deps` downloads it to the user font folder. Skipped over SSH, where the font belongs on the local machine
 
 ```bash
 python3 bootstrap_nvim.py                         # check deps, install everything
@@ -97,7 +99,7 @@ python3 bootstrap_tmux.py --tmux-conf /tmp/test.conf    # use alternate conf pat
 
 **Kitty (optional)** — `bootstrap_kitty.py`:
 1. Requires Kitty on PATH, or installs it with `--install-deps` (apt/dnf/pacman; brew on macOS, where Kitty is a cask)
-2. Checks the configured font using `fc-list` when available; fonts are not auto-installed
+2. Checks the configured font using `fc-list` when available; `--install-deps` downloads it if it's a Nerd Font listed in `nerd_font.ARCHIVES`
 3. Symlinks `kitty/kitty.conf` into Kitty's config dir: `$KITTY_CONFIG_DIRECTORY`, else `$XDG_CONFIG_HOME/kitty`, else `~/.config/kitty`
 4. Preserves existing files and unrelated symlinks as `.bak`, `.bak.1`, etc.; an existing correct symlink is unchanged
 
@@ -107,7 +109,7 @@ python3 bootstrap_kitty.py --install-deps
 python3 bootstrap_kitty.py --kitty-conf /tmp/test-kitty.conf
 ```
 
-This script is independent of the other bootstraps. The bundled font is UbuntuMono Nerd Font, 12 pt; F11 toggles fullscreen.
+This script doesn't depend on the other bootstraps. The bundled font is UbuntuSansMono Nerd Font, 12 pt; F11 toggles fullscreen. To switch to another Nerd Font, change `font_family` and add its release archive to `ARCHIVES` in `nerd_font.py`.
 
 ## Mason Packages (nvim)
 
