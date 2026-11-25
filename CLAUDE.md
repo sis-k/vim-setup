@@ -8,9 +8,11 @@ This is a personal editor configuration repository containing:
 - `nvim/` — Neovim config based on [LazyVim](https://lazyvim.github.io/) starter template
 - `vim/.vimrc` — Legacy Vim config (YouCompleteMe, fzf, NERDTree)
 - `tmux/.tmux.conf` — tmux config (vi keys, mouse, image passthrough, tpm)
+- `kitty/kitty.conf` — Optional Kitty config (UbuntuMono Nerd Font 12 pt, F11 fullscreen)
 - `bootstrap_nvim.py` — Automated Neovim setup script
 - `bootstrap_vim.py` — Automated Vim setup script
 - `bootstrap_tmux.py` — Automated tmux setup script
+- `bootstrap_kitty.py` — Optional Kitty install and config symlink script
 
 ## Neovim Architecture
 
@@ -51,7 +53,7 @@ Create a new file in `nvim/lua/plugins/` returning a lazy.nvim spec table. All f
 
 ## Bootstrap
 
-Both scripts require Python 3.10+ and `git`. Run from the repo root.
+The scripts require Python 3.10+; Neovim, Vim, and tmux setup also use `git`. Run from the repo root.
 
 **Neovim** — `bootstrap_nvim.py`:
 1. Checks and optionally installs system dependencies (`--install-deps`)
@@ -92,6 +94,20 @@ python3 bootstrap_tmux.py                               # install everything
 python3 bootstrap_tmux.py --install-deps                # also auto-install tmux
 python3 bootstrap_tmux.py --tmux-conf /tmp/test.conf    # use alternate conf path
 ```
+
+**Kitty (optional)** — `bootstrap_kitty.py`:
+1. Requires Kitty on PATH, or installs it with `--install-deps` (apt/dnf/pacman/brew)
+2. Checks the configured font using `fc-list` when available; fonts are not auto-installed
+3. Symlinks `kitty/kitty.conf` to `$XDG_CONFIG_HOME/kitty/kitty.conf` (defaults to `~/.config/kitty/kitty.conf`)
+4. Preserves existing files and unrelated symlinks as `.bak`, `.bak.1`, etc.; an existing correct symlink is unchanged
+
+```bash
+python3 bootstrap_kitty.py
+python3 bootstrap_kitty.py --install-deps
+python3 bootstrap_kitty.py --kitty-conf /tmp/test-kitty.conf
+```
+
+This script is independent of the other bootstraps. The bundled font is UbuntuMono Nerd Font, 12 pt; F11 toggles fullscreen.
 
 ## Mason Packages (nvim)
 

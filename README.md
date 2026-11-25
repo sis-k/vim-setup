@@ -1,6 +1,29 @@
 # vim-setup
 Utility scripts to set up vim environment
 
+## Kitty (optional)
+
+```bash
+python3 bootstrap_kitty.py                              # requires Kitty already installed
+python3 bootstrap_kitty.py --install-deps               # also install Kitty if missing
+python3 bootstrap_kitty.py --kitty-conf /tmp/kitty.conf  # use an alternate config path
+```
+
+Requires Python 3.10+. The script symlinks `kitty/kitty.conf` to
+`~/.config/kitty/kitty.conf` (or `$XDG_CONFIG_HOME/kitty/kitty.conf` when set to an
+absolute path). Existing files and unrelated symlinks are moved to `.bak`,
+`.bak.1`, etc., preserving previous backups. Re-running with the correct symlink
+does nothing. Keep this repository in place while using the symlink.
+
+`--install-deps` supports apt, dnf, pacman, and Homebrew. It installs Kitty only;
+the script reports missing fonts separately. The config uses **UbuntuMono Nerd
+Font at 12 pt** and **F11 to toggle fullscreen**. Install UbuntuMono from
+[Nerd Fonts](https://www.nerdfonts.com/font-downloads), or change `font_family` in
+`kitty/kitty.conf` to an installed font. Font detection uses `fc-list` when
+available. Restart Kitty or press **Ctrl+Shift+F5** to apply config changes.
+
+This bootstrap is independent of the Neovim, Vim, and tmux scripts.
+
 ## Neovim
 
 ```bash
